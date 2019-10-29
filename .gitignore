@@ -1,0 +1,9 @@
+[Bb]in
+[Rr]elease
+.vs
+.svn
+obj
+*.pdb
+*.suo
+*.cache
+*.user
