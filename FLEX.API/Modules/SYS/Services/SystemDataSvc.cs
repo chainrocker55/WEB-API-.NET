@@ -92,8 +92,7 @@ namespace FLEX.API.Modules.SYS.Services
                     null 
                 };
 
-                //ct.sp_SFM031_InsertOrUpdateUser.FromSqlRaw("sp_SFM031_InsertOrUpdateUser {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, {17}, {18}, {19}, {20}", objs).ToList();
-                //ct.Database.ExecuteSqlCommand("exec sp_SFM031_InsertOrUpdateUser {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, {17}, {18}, {19}, {20}", objs);
+                ct.Database.ExecuteSqlRaw("sp_SFM031_InsertOrUpdateUser {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, {17}, {18}, {19}, {20}", objs);
                 trans.Complete();
             }
         }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using FLEX.API.Models;
 using FLEX.API.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -51,6 +52,20 @@ namespace FLEX.API.Controllers
         {
             var result = svc.GetNotify(data?.UserCd);
             return Ok(result);
+        }
+
+        [HttpPost]
+        public ActionResult<bool> ResponseNotify(Notify data)
+        {
+            try
+            {
+                var result = svc.ResponseNotify(data);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
         }
     }
 }

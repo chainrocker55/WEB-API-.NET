@@ -21,6 +21,7 @@ namespace FLEX.API.Services
         List<TZ_SCREEN_DETAIL_LANG_MS> GetScreenDetail(string LangCd);
         TZ_USER_MS GetUserProfile(string UserCd);
         List<Notify> GetNotify(string UserCd);
+        bool ResponseNotify(Notify noti);
 
         #region Combo
         List<TZ_LANG_MS> GetLanguage();
@@ -136,6 +137,11 @@ namespace FLEX.API.Services
         public List<Notify> GetNotify(string UserCd)
         {
             return ct.sp_Common_GetNotify.FromSqlRaw("sp_Common_GetNotify {0}", UserCd).ToList();
+        }
+        public bool ResponseNotify(Notify noti)
+        {
+            ct.Database.ExecuteSqlRaw("sp_Common_ResponseNotify {0}, {1}", noti.InfoDateTime, noti.Receiver);
+            return true;
         }
 
         #region Combo
