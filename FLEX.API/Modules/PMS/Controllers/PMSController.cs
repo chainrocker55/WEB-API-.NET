@@ -25,7 +25,7 @@ namespace FLEX.API.Modules.PMS.Controllers
         public ActionResult<List<PMS060_CheckListAndRepairOrder_Result>> sp_PMS060_GetMachineRepairOrderList(PMS060_Search_Criteria criteria)
         {
             var result = svc.sp_PMS060_GetMachineRepairOrderList(criteria);
-            return Ok(result);
+            return result;
         }
 
     }
