@@ -1,6 +1,6 @@
 ﻿using FLEX.API.Models;
 using FLEX.API.Modules.Flex.Models.Combo;
-using FLEX.API.Modules.Models.PMS;
+using FLEX.API.Modules.PMS.Models;
 using FLEX.API.Modules.SYS.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -54,6 +54,8 @@ namespace FLEX.API.Context
 
         #region PMS
         public DbSet<PMS060_CheckListAndRepairOrder_Result> sp_PMS060_GetMachineRepairOrderList { get; set; }
+        public DbSet<PMS061_GetCheckJobH_Result> sp_PMS061_GetCheckJobH { get; set; }
+        public DbSet<PMS061_GetCheckJobH_OH_Result> sp_PMS061_GetCheckJobH_OH { get; set; }
         #endregion
     }
 }
