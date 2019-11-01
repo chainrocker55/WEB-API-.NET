@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using FLEX.API.Common;
 using FLEX.API.Context;
+using FLEX.API.Modules.Services.PMS;
 using FLEX.API.Modules.SYS.Services;
 using FLEX.API.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -53,7 +54,9 @@ namespace FLEX.API
             services.AddDbContext<FLEXContext>(opts => opts.UseSqlServer(conn));
 
             services.AddScoped<IFlexDataSvc, FlexDataSvc>();
+            services.AddScoped<IComboDataSvc, ComboDataSvc>();
             services.AddScoped<ISystemDataSvc, SystemDataSvc>();
+            services.AddScoped<IPMSDataSvc, PMSDataSvc>();
 
             // configure strongly typed settings objects
             var appSettingsSection = Configuration.GetSection("AppSettings");

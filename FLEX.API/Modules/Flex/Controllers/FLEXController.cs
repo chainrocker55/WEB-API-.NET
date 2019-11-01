@@ -67,5 +67,12 @@ namespace FLEX.API.Controllers
                 throw ex;
             }
         }
+
+        [HttpPost]
+        public ActionResult<string> GetToken(UserInfo user)
+        {
+            var t = this.svc.GetToken(user);
+            return Ok(t);
+        }
     }
 }

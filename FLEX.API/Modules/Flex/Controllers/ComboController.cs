@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using FLEX.API.Models;
+using FLEX.API.Modules.Flex.Models.Combo;
 using FLEX.API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,8 +12,8 @@ namespace FLEX.API.Modules.Flex.Controllers
     [ApiController]
     public class ComboController : ControllerBase
     {
-        private readonly IFlexDataSvc svc;
-        public ComboController(IFlexDataSvc service)
+        private readonly IComboDataSvc svc;
+        public ComboController(IComboDataSvc service)
         {
             svc = service;
         }
@@ -49,6 +50,13 @@ namespace FLEX.API.Modules.Flex.Controllers
         public ActionResult<List<TBM_POSITION>> GetPosition()
         {
             var result = svc.GetPosition();
+            return Ok(result);
+        }
+
+        [HttpGet]
+        public ActionResult<List<ComboPersonInCharge_KIBUN_Result>> GetComboPersonInCharge_KIBUN()
+        {
+            var result = svc.GetComboPersonInCharge_KIBUN();
             return Ok(result);
         }
     }

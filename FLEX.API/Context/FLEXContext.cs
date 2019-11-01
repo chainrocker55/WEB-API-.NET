@@ -1,4 +1,6 @@
 ﻿using FLEX.API.Models;
+using FLEX.API.Modules.Flex.Models.Combo;
+using FLEX.API.Modules.Models.PMS;
 using FLEX.API.Modules.SYS.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -21,6 +23,9 @@ namespace FLEX.API.Context
 
             modelBuilder.Entity<TB_CLASS_LIST_MS>()
                 .HasKey(c => new { c.CLS_INFO_CD, c.CLS_CD });
+
+            modelBuilder.Entity<PMS060_CheckListAndRepairOrder_Result>()
+                .HasNoKey();
         }
 
         #region Flex
@@ -38,11 +43,17 @@ namespace FLEX.API.Context
         public DbSet<TZ_MENU_SET_MS> TZ_MENU_SET_MS { get; set; }
         public DbSet<TBM_DIVISION> TBM_DIVISION { get; set; }
         public DbSet<TBM_POSITION> TBM_POSITION { get; set; }
+
+        public DbSet<ComboPersonInCharge_KIBUN_Result> sp_Combo_GetPersonInCharge_KIBUN { get; set; }
         #endregion
 
         #region System
         public DbSet<TB_CLASS_LIST_MS> TB_CLASS_LIST_MS { get; set; }
         public DbSet<sp_SFM031_LoadUser_Result> sp_SFM031_LoadUser { get; set; }
+        #endregion
+
+        #region PMS
+        public DbSet<PMS060_CheckListAndRepairOrder_Result> sp_PMS060_GetMachineRepairOrderList { get; set; }
         #endregion
     }
 }

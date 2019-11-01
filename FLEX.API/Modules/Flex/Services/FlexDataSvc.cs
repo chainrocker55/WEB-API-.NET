@@ -16,20 +16,13 @@ namespace FLEX.API.Services
     public interface IFlexDataSvc
     {
         UserInfo UserLogin(string UserId, string Password);
+        string GetToken(UserInfo user);
         List<NavData> GetMenu(string UserCd);
         List<TZ_MESSAGE_MS> GetMessage(string LangCd);
         List<TZ_SCREEN_DETAIL_LANG_MS> GetScreenDetail(string LangCd);
         TZ_USER_MS GetUserProfile(string UserCd);
         List<Notify> GetNotify(string UserCd);
         bool ResponseNotify(Notify noti);
-
-        #region Combo
-        List<TZ_LANG_MS> GetLanguage();
-        List<TZ_USER_GROUP_MS> GetUserGroup();
-        List<TZ_MENU_SET_MS> GetMenuSet();
-        List<TBM_DIVISION> GetDivision();
-        List<TBM_POSITION> GetPosition();
-        #endregion
     }
 
     public class FlexDataSvc : IFlexDataSvc
@@ -53,6 +46,13 @@ namespace FLEX.API.Services
             if (user == null)
                 return null;
 
+            user.TOKEN = this.GetToken(user);
+            return user;
+        }
+        public string GetToken(UserInfo user)
+        {
+            string token = "";
+
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(_appSettings.Secret);
             var tokenDescriptor = new SecurityTokenDescriptor
@@ -66,13 +66,12 @@ namespace FLEX.API.Services
                     new Claim("LANG_CD", user.LANG_CD),
                 }),
                 Expires = DateTime.UtcNow.AddHours(8),
-                //Expires = DateTime.UtcNow.AddSeconds(60),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
-            var token = tokenHandler.CreateToken(tokenDescriptor);
-            user.TOKEN = tokenHandler.WriteToken(token);
+            var t = tokenHandler.CreateToken(tokenDescriptor);
+            token = tokenHandler.WriteToken(t);
 
-            return user;
+            return token;
         }
         public List<NavData> GetMenu(string UserCd)
         {
@@ -143,28 +142,5 @@ namespace FLEX.API.Services
             ct.Database.ExecuteSqlRaw("sp_Common_ResponseNotify {0}, {1}", noti.InfoDateTime, noti.Receiver);
             return true;
         }
-
-        #region Combo
-        public List<TZ_LANG_MS> GetLanguage()
-        {
-            return ct.TZ_LANG_MS.ToList();
-        }
-        public List<TZ_USER_GROUP_MS> GetUserGroup()
-        {
-            return ct.TZ_USER_GROUP_MS.ToList();
-        }
-        public List<TZ_MENU_SET_MS> GetMenuSet()
-        {
-            return ct.TZ_MENU_SET_MS.ToList();
-        }
-        public List<TBM_DIVISION> GetDivision()
-        {
-            return ct.TBM_DIVISION.OrderBy(x => x.CODE).ToList();
-        }
-        public List<TBM_POSITION> GetPosition()
-        {
-            return ct.TBM_POSITION.OrderBy(x => x.POSITIONCODE).ToList();
-        }
-        #endregion
     }
 }

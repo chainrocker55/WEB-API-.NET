@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using FLEX.API.Modules.Models.PMS;
 using FLEX.API.Modules.Services.PMS;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -18,6 +19,13 @@ namespace FLEX.API.Modules.PMS.Controllers
         public PMSController(IPMSDataSvc service)
         {
             svc = service;
+        }
+
+        [HttpPost]
+        public ActionResult<List<PMS060_CheckListAndRepairOrder_Result>> sp_PMS060_GetMachineRepairOrderList(PMS060_Search_Criteria criteria)
+        {
+            var result = svc.sp_PMS060_GetMachineRepairOrderList(criteria);
+            return Ok(result);
         }
 
     }
