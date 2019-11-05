@@ -18,6 +18,13 @@ namespace FLEX.API.Services
         List<TBM_DIVISION> GetDivision();
         List<TBM_POSITION> GetPosition();
         List<ComboPersonInCharge_KIBUN_Result> GetComboPersonInCharge_KIBUN();
+        List<ComboStringValue> GetComboUserWithPosition();
+        List<ComboStringValue> GetComboLocation();
+        List<ComboIntValue> GetComboSupplier();
+        List<ComboIntValue> GetComboMachineScheduleType();
+        List<ComboStringValue> GetComboMachineStatus();
+        List<ComboStringValue> GetComboMachine();
+        List<ComboIntValue> GetComboPoNumber();
     }
     public class ComboDataSvc : IComboDataSvc
     {
@@ -54,6 +61,41 @@ namespace FLEX.API.Services
         public List<ComboPersonInCharge_KIBUN_Result> GetComboPersonInCharge_KIBUN()
         {
             return this.ct.sp_Combo_GetPersonInCharge_KIBUN.FromSqlRaw("sp_Combo_GetPersonInCharge_KIBUN").ToList();
+        }
+
+        public List<ComboStringValue> GetComboUserWithPosition()
+        {
+            return this.ct.sp_Combo_GetUserAndPosition.FromSqlRaw("sp_Combo_GetUserAndPosition").ToList();
+        }
+
+        public List<ComboStringValue> GetComboLocation()
+        {
+            return this.ct.sp_Combo_GetLocationMs.FromSqlRaw("sp_Combo_GetLocationMs").ToList();
+        }
+        public List<ComboIntValue> GetComboSupplier()
+        {
+            return this.ct.sp_Combo_GetSupplier.FromSqlRaw("sp_Combo_GetSupplier").ToList();
+        }
+
+        public List<ComboIntValue> GetComboMachineScheduleType()
+        {
+            return this.ct.sp_Combo_GetMachineScheduleType.FromSqlRaw("sp_Combo_GetMachineScheduleType").ToList();
+
+        }
+        public List<ComboStringValue> GetComboMachineStatus()
+        {
+            return this.ct.sp_Combo_GetMachineStatus.FromSqlRaw("sp_Combo_GetMachineStatus").ToList();
+
+        }
+        public List<ComboStringValue> GetComboMachine()
+        {
+            return this.ct.sp_Combo_GetMachine_KIBUN.FromSqlRaw("sp_Combo_GetMachine_KIBUN").ToList();
+
+        }
+        public List<ComboIntValue> GetComboPoNumber()
+        {
+            return this.ct.sp_Combo_GetCheckListPoNumber.FromSqlRaw("sp_Combo_GetCheckListPoNumber").ToList();
+
         }
     }
 }

@@ -14,6 +14,7 @@ namespace FLEX.API.Modules.Services.PMS
         List<PMS060_CheckListAndRepairOrder_Result> sp_PMS060_GetMachineRepairOrderList(PMS060_Search_Criteria criteria);
         List<PMS061_GetCheckJobH_Result> sp_PMS061_GetCheckJobH(string CHECK_REPH_ID);
         List<PMS061_GetCheckJobH_OH_Result> sp_PMS061_GetCheckJobH_OH(string CHECK_REPH_ID);
+        List<PMS062_GetJobPmChecklist_Result> sp_PMS062_GetJobPmChecklist(string CHECK_REPH_ID, string MACHINE_NO);
     }
 
     public class PMSDataSvc : IPMSDataSvc
@@ -57,6 +58,11 @@ namespace FLEX.API.Modules.Services.PMS
         public List<PMS061_GetCheckJobH_OH_Result> sp_PMS061_GetCheckJobH_OH(string CHECK_REPH_ID)
         {
             return ct.sp_PMS061_GetCheckJobH_OH.FromSqlRaw("sp_PMS061_GetCheckJobH_OH {0}", CHECK_REPH_ID).ToList();
+        }
+
+        public List<PMS062_GetJobPmChecklist_Result> sp_PMS062_GetJobPmChecklist(string CHECK_REPH_ID, string MACHINE_NO)
+        {
+            return ct.sp_PMS062_GetJobPmChecklist.FromSqlRaw("sp_PMS062_GetJobPmChecklist {0}, {1}", CHECK_REPH_ID , MACHINE_NO).ToList();
         }
     }
 }

@@ -59,5 +59,53 @@ namespace FLEX.API.Modules.Flex.Controllers
             var result = svc.GetComboPersonInCharge_KIBUN();
             return Ok(result);
         }
+
+        [HttpGet]
+        public ActionResult<List<ComboStringValue>> GetComboUserWithPosition()
+        {
+            var result = svc.GetComboUserWithPosition();
+            return Ok(result);
+        }
+
+        [HttpGet]
+        public ActionResult<List<ComboStringValue>> GetComboLocation()
+        {
+            var result = svc.GetComboLocation();
+            return Ok(result);
+        }
+
+        [HttpGet]
+        public ActionResult<List<ComboIntValue>> GetComboSupplier()
+        {
+            var result = svc.GetComboSupplier();
+            return Ok(result);
+        }
+
+        [HttpGet]
+        public ActionResult<List<ComboIntValue>> GetComboMachineScheduleType()
+        {
+            var result = svc.GetComboMachineScheduleType();
+            return Ok(result);
+        }
+
+        [HttpGet]
+        public ActionResult<List<ComboStringValue>> GetComboMachineStatus()
+        {
+            var result = svc.GetComboMachineStatus();
+            return Ok(result);
+        }
+
+        [HttpGet]
+        public ActionResult<List<ComboStringValue>> GetComboMachine()
+        {
+            var result = svc.GetComboMachine();
+            return Ok(result);
+        }
+        [HttpGet]
+        public ActionResult<List<ComboStringValue>> GetComboPoNumber()
+        {
+            var result = svc.GetComboPoNumber();
+            return Ok(result);
+        }
     }
 }

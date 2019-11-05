@@ -39,5 +39,11 @@ namespace FLEX.API.Modules.PMS.Controllers
             return Ok(data);
         }
 
+        [HttpPost]
+        public ActionResult<List<PMS062_GetJobPmChecklist_Result>> sp_PMS062_GetJobPmChecklist(PMS060_CheckListAndRepairOrder_Result row)
+        {
+            var result = svc.sp_PMS062_GetJobPmChecklist(row.CHECK_REPH_ID, row.MACHINE_NO);
+            return Ok(result);
+        }
     }
 }

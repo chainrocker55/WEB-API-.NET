@@ -26,6 +26,10 @@ namespace FLEX.API.Context
 
             modelBuilder.Entity<PMS060_CheckListAndRepairOrder_Result>()
                 .HasNoKey();
+
+            modelBuilder.Entity<PMS062_GetJobPmChecklist_Result>()
+                .HasNoKey();
+               //.HasKey(c => new { c.CHECK_REPH_ID, c.SEQ });
         }
 
         #region Flex
@@ -45,6 +49,15 @@ namespace FLEX.API.Context
         public DbSet<TBM_POSITION> TBM_POSITION { get; set; }
 
         public DbSet<ComboPersonInCharge_KIBUN_Result> sp_Combo_GetPersonInCharge_KIBUN { get; set; }
+
+        public DbSet<ComboStringValue> sp_Combo_GetUserAndPosition { get; set; }
+        public DbSet<ComboStringValue> sp_Combo_GetLocationMs { get; set; }
+        public DbSet<ComboIntValue> sp_Combo_GetSupplier { get; set; }
+        public DbSet<ComboIntValue> sp_Combo_GetMachineScheduleType { get; set; }
+        public DbSet<ComboStringValue> sp_Combo_GetMachineStatus { get; set; }
+        public DbSet<ComboStringValue> sp_Combo_GetMachine_KIBUN { get; set; }
+        public DbSet<ComboIntValue> sp_Combo_GetCheckListPoNumber { get; set; }
+
         #endregion
 
         #region System
@@ -56,6 +69,7 @@ namespace FLEX.API.Context
         public DbSet<PMS060_CheckListAndRepairOrder_Result> sp_PMS060_GetMachineRepairOrderList { get; set; }
         public DbSet<PMS061_GetCheckJobH_Result> sp_PMS061_GetCheckJobH { get; set; }
         public DbSet<PMS061_GetCheckJobH_OH_Result> sp_PMS061_GetCheckJobH_OH { get; set; }
+        public DbSet<PMS062_GetJobPmChecklist_Result> sp_PMS062_GetJobPmChecklist { get; set; }
         #endregion
     }
 }
