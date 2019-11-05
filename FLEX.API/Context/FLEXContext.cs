@@ -70,6 +70,8 @@ namespace FLEX.API.Context
         public DbSet<PMS061_GetCheckJobH_Result> sp_PMS061_GetCheckJobH { get; set; }
         public DbSet<PMS061_GetCheckJobH_OH_Result> sp_PMS061_GetCheckJobH_OH { get; set; }
         public DbSet<PMS062_GetJobPmChecklist_Result> sp_PMS062_GetJobPmChecklist { get; set; }
+        public DbSet<PMS061_GetCheckJobPersonInCharge_Result> sp_PMS061_GetCheckJobPersonInCharge { get; set; }
+        public DbSet<String_Result> PMS061_SaveData { get; set; }
         #endregion
     }
 }

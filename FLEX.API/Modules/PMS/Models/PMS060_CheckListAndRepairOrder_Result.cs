@@ -14,6 +14,7 @@ namespace FLEX.API.Modules.PMS.Models
         public string CHECK_REP_NO { get; set; }
         public string MACHINE_NO { get; set; }
         public string MACHINE_NAME { get; set; }
+        public DateTime? PLAN_DATE { get; set; }
         public DateTime? REQUEST_DATE { get; set; }
         public DateTime? TEST_DATE { get; set; }
         public DateTime? COMPLETE_DATE { get; set; }
@@ -47,8 +48,8 @@ namespace FLEX.API.Modules.PMS.Models
         public string PROBLEM_DESC { get; set; }
         public string REPAIR_METHOD { get; set; }
         public string CAUSE_DELAY { get; set; }
-        public DateTime? START_DATE { get; set; }
-        public DateTime? END_DATE { get; set; }
-        public int DAYS { get; set; }
+        //public DateTime? START_DATE { get; set; }
+        //public DateTime? END_DATE { get; set; }
+        //public int DAYS { get; set; }
     }
 }
