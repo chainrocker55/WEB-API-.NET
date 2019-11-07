@@ -95,17 +95,23 @@ namespace FLEX.API.Modules.SYS.Controllers
             var result = svc.GetUserGroupList();
             return Ok(result);
         }
-        [HttpGet]
-        public ActionResult sp_SFM0061_GetStandardPermission(string userGroup)
+        [HttpGet("{userGroup}")]
+        public ActionResult sp_SFM0061_GetPermission(string userGroup)
         {
             var result = svc.sp_SFM0061_GetStandardPermission(userGroup);
-            return Ok(result);
-        }
-        [HttpGet]
-        public ActionResult sp_SFM0061_GetSpecialPermission(string userGroup)
-        {
-            var result = svc.sp_SFM0061_GetSpecialPermission(userGroup);
-            return Ok(result);
+            var sp = svc.sp_SFM0061_GetSpecialPermission(userGroup);
+            var g = result.GroupBy(g => new
+            {
+                SCREEN_CD = g.SCREEN_CD,
+                SCREEN_NAME = g.SCREEN_NAME,
+            }).Select(x => new SFM0061_GetStandardPermission()
+            {
+                SCREEN_CD = x.Key.SCREEN_CD,
+                SCREEN_NAME = x.Key.SCREEN_NAME,
+                Standard = x.ToList(),
+                Special = sp.Where(y => y.SCREEN_CD == x.Key.SCREEN_CD).ToList()
+            }).ToList();
+            return Ok(g);
         }
         #endregion
     }
