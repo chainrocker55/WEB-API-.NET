@@ -29,7 +29,10 @@ namespace FLEX.API.Context
 
             modelBuilder.Entity<PMS062_GetJobPmChecklist_Result>()
                 .HasNoKey();
-               //.HasKey(c => new { c.CHECK_REPH_ID, c.SEQ });
+            //.HasKey(c => new { c.CHECK_REPH_ID, c.SEQ });
+
+            modelBuilder.Entity<SFM0061_GetStandardPermission_Result>().HasNoKey();
+            modelBuilder.Entity<SFM0061_GetSpecialPermission_Result>().HasNoKey();
         }
 
         #region Flex
@@ -38,12 +41,12 @@ namespace FLEX.API.Context
         public DbSet<TZ_MESSAGE_MS> TZ_MESSAGE_MS { get; set; }
         public DbSet<TZ_SCREEN_DETAIL_LANG_MS> TZ_SCREEN_DETAIL_LANG_MS { get; set; }
         public DbSet<TZ_USER_MS> TZ_USER_MS { get; set; }
+        public DbSet<TZ_USER_GROUP_MS> TZ_USER_GROUP_MS { get; set; }
         public DbSet<Notify> sp_Common_GetNotify { get; set; }
         #endregion
 
         #region Combo
         public DbSet<TZ_LANG_MS> TZ_LANG_MS { get; set; }
-        public DbSet<TZ_USER_GROUP_MS> TZ_USER_GROUP_MS { get; set; }
         public DbSet<TZ_MENU_SET_MS> TZ_MENU_SET_MS { get; set; }
         public DbSet<TBM_DIVISION> TBM_DIVISION { get; set; }
         public DbSet<TBM_POSITION> TBM_POSITION { get; set; }
@@ -63,6 +66,8 @@ namespace FLEX.API.Context
         #region System
         public DbSet<TB_CLASS_LIST_MS> TB_CLASS_LIST_MS { get; set; }
         public DbSet<sp_SFM031_LoadUser_Result> sp_SFM031_LoadUser { get; set; }
+        public DbSet<SFM0061_GetStandardPermission_Result> sp_SFM0061_GetStandardPermission { get; set; }
+        public DbSet<SFM0061_GetSpecialPermission_Result> sp_SFM0061_GetSpecialPermission { get; set; }
         #endregion
 
         #region PMS

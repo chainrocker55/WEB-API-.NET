@@ -87,5 +87,26 @@ namespace FLEX.API.Modules.SYS.Controllers
             }
         }
         #endregion
+
+        #region SFM0060 - Authorized Maintenance
+        [HttpGet]
+        public ActionResult GetUserGroupList()
+        {
+            var result = svc.GetUserGroupList();
+            return Ok(result);
+        }
+        [HttpGet]
+        public ActionResult sp_SFM0061_GetStandardPermission(string userGroup)
+        {
+            var result = svc.sp_SFM0061_GetStandardPermission(userGroup);
+            return Ok(result);
+        }
+        [HttpGet]
+        public ActionResult sp_SFM0061_GetSpecialPermission(string userGroup)
+        {
+            var result = svc.sp_SFM0061_GetSpecialPermission(userGroup);
+            return Ok(result);
+        }
+        #endregion
     }
 }
