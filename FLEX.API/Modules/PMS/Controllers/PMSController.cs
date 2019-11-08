@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Transactions;
+using FLEX.API.Common.Utils;
 using FLEX.API.Modules.PMS.Models;
 using FLEX.API.Modules.Services.PMS;
 using Microsoft.AspNetCore.Authorization;
@@ -46,15 +47,46 @@ namespace FLEX.API.Modules.PMS.Controllers
                 data.Header.MACHINE_SCHEDULEID = row.MACHINE_SCHEDULEID;
                 data.Header.PLAN_DATE = row.PLAN_DATE;
                 data.Header.REQUEST_DATE = row.REQUEST_DATE;
-                data.Header.COMPLETE_DATE = row.COMPLETE_DATE;
                 data.Header.MACHINE_NO = row.MACHINE_NO;
                 data.Header.MACHINE_NAME = row.MACHINE_NAME;
                 data.Header.MACHINE_LOC = row.MACHINE_LOC;
+
+                if (row.SCHEDULE_TYPEID == 1)
+                {
+                    data.Header.COMPLETE_DATE = row.COMPLETE_DATE;
+                }
+
+                if (row.SCHEDULE_TYPEID == 2)
+                {
+                    data.Header.TEST_DATE = row.TEST_DATE;
+                    data.Header.PERIOD = row.PERIOD;
+                    data.Header.PERIOD_ID = row.PERIOD_ID;
+                    data.Header.MACHINE_LOC = row.MACHINE_LOC;
+                    data.Header.MACHINE_LOC_CD = row.MACHINE_LOC_CD;
+
+                    data.DefaultComponent = svc.GetMachineDefaultComponent(data.Header.MACHINE_NO);
+                }
             }
 
-            data.HeaderOverHaul = svc.sp_PMS061_GetCheckJobH_OH(row.CHECK_REPH_ID).SingleOrDefault();
-            if (data.HeaderOverHaul == null)
-                data.HeaderOverHaul = new PMS061_GetCheckJobH_OH_Result();
+            if (data.Header.SCHEDULE_TYPEID == 1) // over haul
+            {
+                data.HeaderOverHaul = svc.sp_PMS061_GetCheckJobH_OH(row.CHECK_REPH_ID).SingleOrDefault();
+                if (data.HeaderOverHaul == null)
+                    data.HeaderOverHaul = new PMS061_GetCheckJobH_OH_Result();
+            }
+
+            if (data.Header.SCHEDULE_TYPEID == 2) // pm
+            {
+                data.PmChecklist = svc.sp_PMS062_GetJobPmChecklist(row.CHECK_REPH_ID, row.MACHINE_NO).ToList();
+                if (data.PmChecklist == null)
+                    data.PmChecklist = new List<PMS062_GetJobPmChecklist_Result>();
+
+                data.PmParts = svc.sp_PMS062_GetJobPmPart(data.Header.CHECK_REPH_ID, null, null).ToList();
+                if (data.PmParts == null)
+                    data.PmParts = new List<PMS062_GetJobPmPart_Result>();
+
+            }
+
 
             data.PersonInCharge = svc.sp_PMS061_GetCheckJobPersonInCharge(row.CHECK_REPH_ID, row.MACHINE_NO).ToList();
             if (data.PersonInCharge == null)
@@ -71,18 +103,114 @@ namespace FLEX.API.Modules.PMS.Controllers
         }
 
         [HttpPost]
-        public ActionResult<string> PMS061_SaveData(PMS061_DTO data, string user)
+        public ActionResult<List<PMS062_GetJobPmPart_Result>> sp_PMS062_GetJobPmPart(PMS062_GetJobPmPart_Criteria c)
+        {
+            var result = svc.sp_PMS062_GetJobPmPart(c.CHECK_REPH_ID, c.MCBOM_CD, c.PARTS_LOC_CD);
+
+            // get in qty
+            if(result!=null)
+            {
+                var xml = XmlUtil.ConvertToXml_Store(result);
+                var InQty = svc.sp_PMS062_GetInQty(c.CHECK_REPH_ID, xml);
+                foreach (var item in result)
+                {
+                    // set in qty
+                    var qty = InQty.Where(q =>
+                        q.PARTS_ITEM_CD == item.PARTS_ITEM_CD
+                        && q.PARTS_LOC_CD == item.PARTS_LOC_CD
+                        && q.UNITCODE == item.UNITCODE
+                    ).Select(q => q.ISSUE_INVQTY).FirstOrDefault();
+                    item.IN_QTY = qty;
+                }
+            }
+
+            return Ok(result);
+        }
+
+        [HttpPost]
+        public ActionResult<List<PMS062_GetInQty_Result>> sp_PMS062_GetInQty(GetInQtyParam param)
         {
             try
             {
-                var result = svc.PMS061_SaveData(data, user);
+                if(param==null)
+                {
+                    return Ok(new List<PMS062_GetInQty_Result>());
+                }
+
+                var xml = XmlUtil.ConvertToXml_Store(param.ITEMS);
+                var result = svc.sp_PMS062_GetInQty(param.CHECK_REPH_ID, xml);
                 //return Ok(new List<string>() { result }); ;
-                return Ok(result); 
+                return Ok(result);
             }
             catch (Exception ex)
             {
                 return BadRequest(ex.GetBaseException());
             }
         }
+
+
+        [HttpPost]
+        public ActionResult<string> PMS061_SaveData(PMS061_DTO data)
+        {
+            try
+            {               
+                var result = svc.PMS061_SaveData(data, data.CurrentUser);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.GetBaseException());
+            }
+        }
+
+        [HttpPost]
+        public ActionResult<string> PMS062_SaveData(PMS061_DTO data)
+        {
+            try
+            {
+                // validate data
+                var error = svc.Validate_PMS062(data);
+                if (error != null)
+                {
+                    return BadRequest(error);
+                }
+
+                var result = svc.PMS062_SaveData(data, data.CurrentUser);
+                //return Ok(new List<string>() { result }); ;
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.GetBaseException());
+            }
+        }
+
+        [HttpPost]
+        public ActionResult<string> GetMachineDefaultComponent(string MACHINE_NO)
+        {
+            try
+            {
+                var result = svc.GetMachineDefaultComponent(MACHINE_NO);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.GetBaseException());
+            }
+        }
+        [HttpPost]
+        public ActionResult<List<DLG045_ItemFindDialogWithParam_Result>> GetItemFindDialogWithParam(DLG045_Search_Criteria criteria)
+        {
+            try
+            {
+                var result = svc.sp_DLG045_ItemFindDialogWithParam(criteria);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.GetBaseException());
+            }
+        }
+
     }
 }

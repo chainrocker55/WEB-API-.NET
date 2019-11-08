@@ -9,7 +9,7 @@ using System.Data.Common;
 
 namespace FLEX.API.Context
 {
-    public class FLEXContext: DbContext
+    public class FLEXContext : DbContext
     {
         public FLEXContext(DbContextOptions options) : base(options)
         {
@@ -29,7 +29,22 @@ namespace FLEX.API.Context
 
             modelBuilder.Entity<PMS062_GetJobPmChecklist_Result>()
                 .HasNoKey();
-               //.HasKey(c => new { c.CHECK_REPH_ID, c.SEQ });
+
+            modelBuilder.Entity<PMS062_GetJobPmPart_Result>()
+               .HasNoKey();
+
+            modelBuilder.Entity<PMS062_GetInQty_Result>()
+               .HasNoKey();
+
+            modelBuilder.Entity<DLG045_ItemFindDialogWithParam_Result>()
+               .HasNoKey();
+
+            modelBuilder.Entity<PMS062_GetJobPmPart_Result>()
+               .HasNoKey();
+
+            modelBuilder.Entity<PMS062_GetItemOnhandAtDate_Result>().HasNoKey();
+            modelBuilder.Entity<PMS062_Transaction>().HasNoKey();
+            modelBuilder.Entity<PMS062_ConvertToInventoryUnit_Result>().HasNoKey();
         }
 
         #region Flex
@@ -57,6 +72,10 @@ namespace FLEX.API.Context
         public DbSet<ComboStringValue> sp_Combo_GetMachineStatus { get; set; }
         public DbSet<ComboStringValue> sp_Combo_GetMachine_KIBUN { get; set; }
         public DbSet<ComboIntValue> sp_Combo_GetCheckListPoNumber { get; set; }
+        public DbSet<ComboIntValue> sp_Combo_GetMachinePeriod { get; set; }
+        public DbSet<ComboStringValue> sp_Combo_GetMachineComponent_KIBUN { get; set; }
+        public DbSet<ComboStringValue> sp_Combo_GetItemUnit_KIBUN { get; set; }
+        public DbSet<ComboStringValue> sp_Combo_GetUnit_KIBUN { get; set; }
 
         #endregion
 
@@ -72,6 +91,13 @@ namespace FLEX.API.Context
         public DbSet<PMS062_GetJobPmChecklist_Result> sp_PMS062_GetJobPmChecklist { get; set; }
         public DbSet<PMS061_GetCheckJobPersonInCharge_Result> sp_PMS061_GetCheckJobPersonInCharge { get; set; }
         public DbSet<String_Result> PMS061_SaveData { get; set; }
+        public DbSet<String_Result> sp_PMS062_GetMachineDefaultComponent { get; set; }
+        public DbSet<PMS062_GetJobPmPart_Result> sp_PMS062_GetJobPmPart { get; set; }
+        public DbSet<PMS062_GetInQty_Result> sp_PMS062_GetInQty { get; set; }
+        public DbSet<DLG045_ItemFindDialogWithParam_Result> sp_DLG045_ItemFindDialogWithParam { get; set; }
+        public DbSet<PMS062_GetItemOnhandAtDate_Result> sp_PMS062_GetItemOnhandAtDate { get; set; }
+        public DbSet<PMS062_ConvertToInventoryUnit_Result> sp_PMS062_ConvertToInventoryUnit { get; set; }
         #endregion
+
     }
 }

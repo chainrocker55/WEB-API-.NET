@@ -8,7 +8,6 @@ namespace FLEX.API.Modules.PMS.Models
 {
     public class PMS060_CheckListAndRepairOrder_Result
     {
-        [Key]
         public int? MACHINE_SCHEDULEID { get; set; }
         public string CHECK_REPH_ID { get; set; }
         public string CHECK_REP_NO { get; set; }
@@ -48,8 +47,10 @@ namespace FLEX.API.Modules.PMS.Models
         public string PROBLEM_DESC { get; set; }
         public string REPAIR_METHOD { get; set; }
         public string CAUSE_DELAY { get; set; }
-        //public DateTime? START_DATE { get; set; }
-        //public DateTime? END_DATE { get; set; }
-        //public int DAYS { get; set; }
+
+
+        public DateTime? START_DATE { get; set; }
+        public DateTime? END_DATE { get; set; }
+        public int DAYS { get; set; }
     }
 }
