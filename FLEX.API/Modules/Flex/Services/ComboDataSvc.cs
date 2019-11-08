@@ -25,6 +25,10 @@ namespace FLEX.API.Services
         List<ComboStringValue> GetComboMachineStatus();
         List<ComboStringValue> GetComboMachine();
         List<ComboIntValue> GetComboPoNumber();
+        List<ComboIntValue> GetComboMachinePeriod();
+        List<ComboStringValue> GetComboMachineComponent(string MACHINE_NO);
+        List<ComboStringValue> GetComboItemUnit(string ITEM_CD);
+        List<ComboStringValue> GetComboUnit(bool? SHOW_CODE);
     }
     public class ComboDataSvc : IComboDataSvc
     {
@@ -97,5 +101,28 @@ namespace FLEX.API.Services
             return this.ct.sp_Combo_GetCheckListPoNumber.FromSqlRaw("sp_Combo_GetCheckListPoNumber").ToList();
 
         }
+        public List<ComboIntValue> GetComboMachinePeriod()
+        {
+            return this.ct.sp_Combo_GetMachinePeriod.FromSqlRaw("sp_Combo_GetMachinePeriod").ToList();
+
+        }
+
+        public List<ComboStringValue> GetComboMachineComponent(string MACHINE_NO)
+        {
+            return this.ct.sp_Combo_GetMachineComponent_KIBUN.FromSqlRaw("sp_Combo_GetMachineComponent_KIBUN {0}", MACHINE_NO).ToList();
+
+        }
+
+        public List<ComboStringValue> GetComboItemUnit(string ITEM_CD)
+        {
+            return this.ct.sp_Combo_GetItemUnit_KIBUN.FromSqlRaw("sp_Combo_GetItemUnit_KIBUN {0}, {1}, {2}", ITEM_CD, null, true).ToList();
+
+        }
+
+        public List<ComboStringValue> GetComboUnit(bool? SHOW_CODE)
+        {
+            return this.ct.sp_Combo_GetUnit_KIBUN.FromSqlRaw("sp_Combo_GetUnit_KIBUN {0}", SHOW_CODE).ToList();
+        }
+
     }
 }

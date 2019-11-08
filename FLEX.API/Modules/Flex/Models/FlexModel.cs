@@ -39,4 +39,17 @@ namespace FLEX.API.Models
     {
         public string LangCd { get; set; }
     }
+
+    public class ErrorMessage
+    {
+        public string MSG_CD { get; set; }
+        public object[] objParam { get; set; }
+
+        public ErrorMessage() { }
+        public ErrorMessage(string msg_cd, object[] param) 
+        {
+            this.MSG_CD = msg_cd;
+            this.objParam = param;
+        }
+    }
 }

@@ -107,5 +107,32 @@ namespace FLEX.API.Modules.Flex.Controllers
             var result = svc.GetComboPoNumber();
             return Ok(result);
         }
+        [HttpGet]
+        public ActionResult<List<ComboIntValue>> GetComboMachinePeriod()
+        {
+            var result = svc.GetComboMachinePeriod();
+            return Ok(result);
+        }
+        [HttpGet]
+        public ActionResult<List<ComboIntValue>> GetComboMachineComponent(string MACHINE_NO)
+        {
+            var result = svc.GetComboMachineComponent(MACHINE_NO);
+            return Ok(result);
+        }
+        [HttpGet]
+        public ActionResult<List<ComboStringValue>> GetComboItemUnit(string ITEM_CD)
+        {
+            var result = svc.GetComboItemUnit(ITEM_CD);
+            return Ok(result);
+        }
+
+        [HttpGet]
+        public ActionResult<List<ComboStringValue>> GetComboUnit(bool? SHOW_CODE)
+        {
+            var result = svc.GetComboUnit(SHOW_CODE);
+            return Ok(result);
+        }
+
+
     }
 }
