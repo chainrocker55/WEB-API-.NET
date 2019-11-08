@@ -1,6 +1,7 @@
 ﻿using FLEX.API.Common;
 using FLEX.API.Context;
 using FLEX.API.Models;
+using FLEX.API.Modules.Flex.Models;
 using FLEX.API.Modules.SYS.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -23,6 +24,7 @@ namespace FLEX.API.Modules.SYS.Services
         List<TZ_USER_GROUP_MS> GetUserGroupList();
         List<SFM0061_GetStandardPermission_Result> sp_SFM0061_GetStandardPermission(string userGroup);
         List<SFM0061_GetSpecialPermission_Result> sp_SFM0061_GetSpecialPermission(string userGroup);
+        void UpdatePermission(TZ_ACCESS_CONTROL_MS data, string userCd);
     }
     public class SystemDataSvc : ISystemDataSvc
     {
@@ -113,6 +115,30 @@ namespace FLEX.API.Modules.SYS.Services
         public List<SFM0061_GetSpecialPermission_Result> sp_SFM0061_GetSpecialPermission(string userGroup)
         {
             return ct.sp_SFM0061_GetSpecialPermission.FromSqlRaw("sp_SFM0061_GetSpecialPermission {0}", userGroup).ToList();
+        }
+        public void UpdatePermission(TZ_ACCESS_CONTROL_MS data, string userCd)
+        {
+            var tb = ct.TZ_ACCESS_CONTROL_MS.Where(x => x.GROUP_CD == data.GROUP_CD && x.SCREEN_CD == data.SCREEN_CD && x.METHOD == data.METHOD).ToList().SingleOrDefault();
+            if (tb != null)
+            {
+                tb.CAN_EXECUTE = data.CAN_EXECUTE;
+                tb.UPD_BY = userCd;
+                tb.UPD_DATE = DateTime.Now;
+                tb.UPD_MACHINE = "Api";
+                ct.SaveChanges();
+            }
+            else
+            {
+                tb = data;
+                tb.CRT_BY = userCd;
+                tb.CRT_DATE = DateTime.Now;
+                tb.CRT_MACHINE = "Api";
+                tb.UPD_BY = null;
+                tb.UPD_DATE = null;
+                tb.UPD_MACHINE = null;
+                ct.TZ_ACCESS_CONTROL_MS.Add(tb);
+                ct.SaveChanges();
+            }
         }
     }
 }
