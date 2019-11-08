@@ -40,6 +40,13 @@ namespace FLEX.API.Controllers
         }
 
         [HttpPost]
+        public ActionResult<string> InsertScreenDetail(List<TZ_SCREEN_DETAIL_LANG_MS> dataList)
+        {
+            svc.InsertScreenDetail(dataList);
+            return Ok("OK");
+        }
+
+        [HttpPost]
         public ActionResult<TZ_USER_MS> GetUserProfile(AuthModel data)
         {
             var user = svc.GetUserProfile(data?.UserCd);

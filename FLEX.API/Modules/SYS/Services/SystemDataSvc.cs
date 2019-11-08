@@ -19,6 +19,10 @@ namespace FLEX.API.Modules.SYS.Services
         List<TZ_USER_MS> GetUserList();
         sp_SFM031_LoadUser_Result GetUser(string UserCd);
         void SaveUser(sp_SFM031_LoadUser_Result data, string userCd);
+
+        List<TZ_USER_GROUP_MS> GetUserGroupList();
+        List<SFM0061_GetStandardPermission_Result> sp_SFM0061_GetStandardPermission(string userGroup);
+        List<SFM0061_GetSpecialPermission_Result> sp_SFM0061_GetSpecialPermission(string userGroup);
     }
     public class SystemDataSvc : ISystemDataSvc
     {
@@ -95,6 +99,20 @@ namespace FLEX.API.Modules.SYS.Services
                 ct.Database.ExecuteSqlRaw("sp_SFM031_InsertOrUpdateUser {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, {17}, {18}, {19}, {20}", objs);
                 trans.Complete();
             }
+        }
+
+        public List<TZ_USER_GROUP_MS> GetUserGroupList()
+        {
+            return ct.TZ_USER_GROUP_MS.OrderBy(x => x.GROUP_CD).ToList();
+        }
+
+        public List<SFM0061_GetStandardPermission_Result> sp_SFM0061_GetStandardPermission(string userGroup)
+        {
+            return ct.sp_SFM0061_GetStandardPermission.FromSqlRaw("sp_SFM0061_GetStandardPermission {0}", userGroup).ToList();
+        }
+        public List<SFM0061_GetSpecialPermission_Result> sp_SFM0061_GetSpecialPermission(string userGroup)
+        {
+            return ct.sp_SFM0061_GetSpecialPermission.FromSqlRaw("sp_SFM0061_GetSpecialPermission {0}", userGroup).ToList();
         }
     }
 }

@@ -10,6 +10,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
+using System.Transactions;
 
 namespace FLEX.API.Services
 {
@@ -20,6 +21,7 @@ namespace FLEX.API.Services
         List<NavData> GetMenu(string UserCd);
         List<TZ_MESSAGE_MS> GetMessage(string LangCd);
         List<TZ_SCREEN_DETAIL_LANG_MS> GetScreenDetail(string LangCd);
+        void InsertScreenDetail(List<TZ_SCREEN_DETAIL_LANG_MS> dataList);
         TZ_USER_MS GetUserProfile(string UserCd);
         List<Notify> GetNotify(string UserCd);
         bool ResponseNotify(Notify noti);
@@ -127,6 +129,26 @@ namespace FLEX.API.Services
             else
             {
                 return ct.TZ_SCREEN_DETAIL_LANG_MS.Where(x => x.LANG_CD == LangCd).ToList();
+            }
+        }
+        public void InsertScreenDetail(List<TZ_SCREEN_DETAIL_LANG_MS> dataList)
+        {
+            using (TransactionScope trans = new TransactionScope())
+            {
+                foreach (var data in dataList)
+                {
+                    if (!ct.TZ_SCREEN_DETAIL_LANG_MS.Any(x => x.SCREEN_CD == data.SCREEN_CD && x.CONTROL_CD == data.CONTROL_CD))
+                    {
+                        var ll = ct.TZ_LANG_MS.ToList();
+                        foreach (var l in ll)
+                        {
+                            data.LANG_CD = l.LANG_CD;
+                            ct.TZ_SCREEN_DETAIL_LANG_MS.Add(data);
+                            ct.SaveChanges();
+                        }
+                    }
+                }
+                trans.Complete();
             }
         }
         public TZ_USER_MS GetUserProfile(string UserCd)
