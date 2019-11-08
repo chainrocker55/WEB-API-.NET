@@ -5,6 +5,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using FLEX.API.Common;
 using FLEX.API.Models;
+using FLEX.API.Modules.Flex.Models;
 using FLEX.API.Modules.SYS.Models;
 using FLEX.API.Modules.SYS.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -110,8 +111,13 @@ namespace FLEX.API.Modules.SYS.Controllers
                 SCREEN_NAME = x.Key.SCREEN_NAME,
                 Standard = x.ToList(),
                 Special = sp.Where(y => y.SCREEN_CD == x.Key.SCREEN_CD).ToList()
-            }).ToList();
+            }).OrderBy(s => s.SCREEN_CD).ToList();
             return Ok(g);
+        }
+        [HttpPost]
+        public void UpdatePermission(TZ_ACCESS_CONTROL_MS data)
+        {
+            svc.UpdatePermission(data, this.UserCd);
         }
         #endregion
     }

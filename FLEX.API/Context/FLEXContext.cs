@@ -1,4 +1,5 @@
 ﻿using FLEX.API.Models;
+using FLEX.API.Modules.Flex.Models;
 using FLEX.API.Modules.Flex.Models.Combo;
 using FLEX.API.Modules.PMS.Models;
 using FLEX.API.Modules.SYS.Models;
@@ -9,7 +10,7 @@ using System.Data.Common;
 
 namespace FLEX.API.Context
 {
-    public class FLEXContext: DbContext
+    public class FLEXContext : DbContext
     {
         public FLEXContext(DbContextOptions options) : base(options)
         {
@@ -18,18 +19,13 @@ namespace FLEX.API.Context
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<TZ_SCREEN_DETAIL_LANG_MS>()
-                .HasKey(c => new { c.CONTROL_CD, c.LANG_CD, c.SCREEN_CD });
+            modelBuilder.Entity<TZ_SCREEN_DETAIL_LANG_MS>().HasKey(c => new { c.CONTROL_CD, c.LANG_CD, c.SCREEN_CD });
+            modelBuilder.Entity<TZ_ACCESS_CONTROL_MS>().HasKey(c => new { c.GROUP_CD, c.SCREEN_CD, c.METHOD });
 
-            modelBuilder.Entity<TB_CLASS_LIST_MS>()
-                .HasKey(c => new { c.CLS_INFO_CD, c.CLS_CD });
+            modelBuilder.Entity<TB_CLASS_LIST_MS>().HasKey(c => new { c.CLS_INFO_CD, c.CLS_CD });
 
-            modelBuilder.Entity<PMS060_CheckListAndRepairOrder_Result>()
-                .HasNoKey();
-
-            modelBuilder.Entity<PMS062_GetJobPmChecklist_Result>()
-                .HasNoKey();
-            //.HasKey(c => new { c.CHECK_REPH_ID, c.SEQ });
+            modelBuilder.Entity<PMS060_CheckListAndRepairOrder_Result>().HasNoKey();
+            modelBuilder.Entity<PMS062_GetJobPmChecklist_Result>().HasNoKey();
 
             modelBuilder.Entity<SFM0061_GetStandardPermission_Result>().HasNoKey();
             modelBuilder.Entity<SFM0061_GetSpecialPermission_Result>().HasNoKey();
@@ -42,6 +38,7 @@ namespace FLEX.API.Context
         public DbSet<TZ_SCREEN_DETAIL_LANG_MS> TZ_SCREEN_DETAIL_LANG_MS { get; set; }
         public DbSet<TZ_USER_MS> TZ_USER_MS { get; set; }
         public DbSet<TZ_USER_GROUP_MS> TZ_USER_GROUP_MS { get; set; }
+        public DbSet<TZ_ACCESS_CONTROL_MS> TZ_ACCESS_CONTROL_MS { get; set; }
         public DbSet<Notify> sp_Common_GetNotify { get; set; }
         #endregion
 
