@@ -40,13 +40,13 @@ namespace FLEX.API.Models
         public string LangCd { get; set; }
     }
 
-    public class ErrorMessage
+    public class ServiceException : Exception
     {
         public string MSG_CD { get; set; }
         public object[] objParam { get; set; }
 
-        public ErrorMessage() { }
-        public ErrorMessage(string msg_cd, object[] param) 
+        public ServiceException() { }
+        public ServiceException(string msg_cd, object[] param = null)
         {
             this.MSG_CD = msg_cd;
             this.objParam = param;

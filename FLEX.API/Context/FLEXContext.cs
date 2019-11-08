@@ -49,6 +49,7 @@ namespace FLEX.API.Context
             modelBuilder.Entity<PMS062_GetItemOnhandAtDate_Result>().HasNoKey();
             modelBuilder.Entity<PMS062_Transaction>().HasNoKey();
             modelBuilder.Entity<PMS062_ConvertToInventoryUnit_Result>().HasNoKey();
+            modelBuilder.Entity<PMS062_GetApproveRoute_Result>().HasNoKey();
         }
 
         #region Flex
@@ -103,6 +104,7 @@ namespace FLEX.API.Context
         public DbSet<DLG045_ItemFindDialogWithParam_Result> sp_DLG045_ItemFindDialogWithParam { get; set; }
         public DbSet<PMS062_GetItemOnhandAtDate_Result> sp_PMS062_GetItemOnhandAtDate { get; set; }
         public DbSet<PMS062_ConvertToInventoryUnit_Result> sp_PMS062_ConvertToInventoryUnit { get; set; }
+        public DbSet<PMS062_GetApproveRoute_Result> PMS062_GetApproveRoute { get; set; }
         #endregion
 
     }

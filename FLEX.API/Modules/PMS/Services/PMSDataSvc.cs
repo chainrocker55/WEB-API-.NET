@@ -20,13 +20,15 @@ namespace FLEX.API.Modules.Services.PMS
         List<PMS061_GetCheckJobH_OH_Result> sp_PMS061_GetCheckJobH_OH(string CHECK_REPH_ID);
         List<PMS061_GetCheckJobPersonInCharge_Result> sp_PMS061_GetCheckJobPersonInCharge(string CHECK_REPH_ID, string MACHINE_NO);
         string PMS061_SaveData(PMS061_DTO data, string user);
-        string PMS062_SaveData(PMS061_DTO data, string user);
+        string PMS062_SaveData(PMS061_DTO data);
         string GetMachineDefaultComponent(string MACHINE_NO);
         List<PMS062_GetJobPmChecklist_Result> sp_PMS062_GetJobPmChecklist(string CHECK_REPH_ID, string MACHINE_NO);
         List<PMS062_GetJobPmPart_Result> sp_PMS062_GetJobPmPart(string CHECK_REPH_ID, string MCBOM_CD, string PARTS_LOC_CD);
         List<PMS062_GetInQty_Result> sp_PMS062_GetInQty(string CHECK_REPH_ID, string xml);
         List<DLG045_ItemFindDialogWithParam_Result> sp_DLG045_ItemFindDialogWithParam(DLG045_Search_Criteria criteria);
-        ErrorMessage Validate_PMS062(PMS061_DTO data);
+        string PMS062_SendToApprove(PMS061_DTO data);
+        string PMS062_Revise(PMS061_DTO data);
+        void PMS062_Cancel(PMS061_DTO data);
     }
 
     public class PMSDataSvc : IPMSDataSvc
@@ -37,6 +39,19 @@ namespace FLEX.API.Modules.Services.PMS
         {
             ct = context;
         }
+
+        #region pms status
+        const string STATUS_ACTIVE_PLAN = "F01"; // Active Plan
+        const string STATUS_CANCEL_PLAN = "F02"; // Cancelled Plan
+        const string STATUS_NEW = "F03"; // New Check/Repair Order
+        const string STATUS_DURING_ASSIGN = "F04"; // During Assign
+        const string STATUS_RECEIVED = "F05"; // Received Check/Repair Order
+        const string STATUS_DURING_APPROVE = "F06"; // During Approve
+        const string STATUS_REVISE = "F07"; // Revised
+        const string STATUS_PARTIAL = "F08"; // Partial Check/Repair Order
+        const string STATUS_COMPLETE = "F09"; // Completed Check/Repair Order
+        const string STATUS_CANCEL = "F10"; // Cancelled Check/Repair Order
+        #endregion
 
         public List<PMS060_CheckListAndRepairOrder_Result> sp_PMS060_GetMachineRepairOrderList(PMS060_Search_Criteria criteria)
         {
@@ -164,128 +179,145 @@ namespace FLEX.API.Modules.Services.PMS
             }
         }
 
-        public string PMS062_SaveData(PMS061_DTO data, string user)
+        public string PMS062_SaveData(PMS061_DTO data)
         {
+            // validate data
+            Validate_PMS062(data);
+
+            // get transaction           
+            var partTransaction = GetPartTransaction(data.PmParts, data.Header.CHECK_REPH_ID, data.Header.TEST_DATE, null);
+
+            return PMS062_SaveAll(data.Header, data.PersonInCharge, data.PmChecklist, data.PmParts, partTransaction, null, null, data.CurrentUser);
+
+        }
+
+        public string PMS062_SaveAll(PMS061_GetCheckJobH_Result h, List<PMS061_GetCheckJobPersonInCharge_Result> personInCharge, List<PMS062_GetJobPmChecklist_Result> checklist, List<PMS062_GetJobPmPart_Result> partsData, List<PMS062_Transaction> partTransaction, List<string> approver, ApproveHistory approveHistory, string userCd)
+        {
+
             using (var trans = new TransactionScope())
             {
                 var hid = ct.PMS061_SaveData.FromSqlRaw("sp_PMS061_InsertOrUpdateCheckJobHeader {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, {17}, {18}, {19}, {20}, {21}, {22}, {23}, {24}, {25}, {26}, {27}, {28}",
-                    data.Header.CHECK_REPH_ID,
-                    data.Header.CHECK_REP_NO,
-                    data.Header.MACHINE_SCHEDULEID,
-                    data.Header.MACHINE_NO,
-                    data.Header.MACHINE_NAME,
-                    data.Header.PLAN_DATE,
-                    data.Header.REQUEST_DATE,
-                    data.Header.COMPLETE_DATE,
-                    data.Header.COMPLETE_TIME,
-                    data.Header.TEST_DATE,
-                    data.Header.MACHINE_LOC_CD,
-                    data.Header.MACHINE_LOC,
-                    data.Header.APPROVE_ID,
-                    data.Header.CUR_LEVEL,
-                    data.Header.NEXT_LEVEL,
-                    data.Header.PERIOD,
-                    data.Header.PERIOD_ID,
-                    data.Header.COMPLETE_MTN,
-                    data.Header.COMPLETE_RQ,
-                    data.Header.SCHEDULE_TYPEID,
-                    data.Header.AUTO_CREATEFLAG,
-                    data.Header.CHECK_REP_NO_REF,
-                    data.Header.REVISE_REMARK,
-                    data.Header.CANCEL_REMARK,
-                    data.Header.PRINT_FLAG,
-                    data.Header.STATUSID,
-                    data.Header.DELETEFLAG,
+                    h.CHECK_REPH_ID,
+                    h.CHECK_REP_NO,
+                    h.MACHINE_SCHEDULEID,
+                    h.MACHINE_NO,
+                    h.MACHINE_NAME,
+                    h.PLAN_DATE,
+                    h.REQUEST_DATE,
+                    h.COMPLETE_DATE,
+                    h.COMPLETE_TIME,
+                    h.TEST_DATE,
+                    h.MACHINE_LOC_CD,
+                    h.MACHINE_LOC,
+                    h.APPROVE_ID,
+                    h.CUR_LEVEL,
+                    h.NEXT_LEVEL,
+                    h.PERIOD,
+                    h.PERIOD_ID,
+                    h.COMPLETE_MTN,
+                    h.COMPLETE_RQ,
+                    h.SCHEDULE_TYPEID,
+                    h.AUTO_CREATEFLAG,
+                    h.CHECK_REP_NO_REF,
+                    h.REVISE_REMARK,
+                    h.CANCEL_REMARK,
+                    h.PRINT_FLAG,
+                    h.STATUSID,
+                    h.DELETEFLAG,
 
-                    user,
+                    userCd,
                     Constant.DEFAULT_MACHINE
                 ).ToList().FirstOrDefault()?.VALUE;
 
 
 
-                #region person in charge
-                var personInCharge = data.PersonInCharge;
-                for (int i = 0; i < personInCharge.Count; i++)
+                #region person in charge      
+                if (personInCharge != null)
                 {
-                    var item = personInCharge[i];
-                    item.CHECK_REPH_ID = hid;
-                    item.SEQ = i + 1;
-                }
-                var xml = XmlUtil.ConvertToXml_Store(personInCharge);
-                ct.Database.ExecuteSqlRaw("sp_PMS061_InsertOrUpdateCheckJobPersonInCharge {0}, {1}, {2}, {3}",
-                    hid,
-                    xml,
+                    for (int i = 0; i < personInCharge.Count; i++)
+                    {
+                        var item = personInCharge[i];
+                        item.CHECK_REPH_ID = hid;
+                        item.SEQ = i + 1;
+                    }
 
-                    user,
-                    Constant.DEFAULT_MACHINE
-                );
+                    var xml = XmlUtil.ConvertToXml_Store(personInCharge);
+                    ct.Database.ExecuteSqlRaw("sp_PMS061_InsertOrUpdateCheckJobPersonInCharge {0}, {1}, {2}, {3}",
+                        hid,
+                        xml,
+
+                        userCd,
+                        Constant.DEFAULT_MACHINE
+                    );
+                }
                 #endregion
 
                 #region checklist
-                if (data.PmChecklist != null)
+                if (checklist != null)
                 {
-                    var xmlChecklist = XmlUtil.ConvertToXml_Store(data.PmChecklist);
+                    var xmlChecklist = XmlUtil.ConvertToXml_Store(checklist);
                     ct.Database.ExecuteSqlRaw("sp_PMS062_InsertOrUpdatePmChecklist {0}, {1}, {2}, {3}",
                         hid,
                         xmlChecklist,
-                        user,
+                        userCd,
                         Constant.DEFAULT_MACHINE
                     );
                 }
                 #endregion
 
                 #region part
-                if (data.PmParts != null)
+                if (partsData != null)
                 {
-                    var xmlPart = XmlUtil.ConvertToXml_Store(data.PmParts);
+                    var xmlPart = XmlUtil.ConvertToXml_Store(partsData);
                     ct.Database.ExecuteSqlRaw("sp_PMS062_InsertOrUpdatePmPart {0}, {1}, {2}, {3}, {4}, {5}",
                         hid,
-                        data.Header.TEST_DATE,
-                        data.Header.MACHINE_NO,
+                        h.TEST_DATE,
+                        h.MACHINE_NO,
                         xmlPart,
-                        user,
+                        userCd,
                         Constant.DEFAULT_MACHINE
                     );
 
-                    var onhand = PMS062_GetItemOnhandAtDate(data.PmParts.ToList(), hid, data.Header.TEST_DATE.Value);
-                    var partTransaction = GetPartTransaction(data.PmParts, hid, data.Header.TEST_DATE, onhand);
-                    var xmlTrans = XmlUtil.ConvertToXml_Store(partTransaction);
-                    ct.Database.ExecuteSqlRaw("ct.sp_PMS062_SaveCheckJobTransaction {0}, {1}, {2}, {3}, {4}, {5}, {6}",
-                        hid,
-                        data.Header.CHECK_REP_NO,
-                        data.Header.TEST_DATE,
-                        data.Header.MACHINE_NO,
-                        xmlTrans,
-                        user,
-                        Constant.DEFAULT_MACHINE
-                    );
+                    if (partTransaction != null)
+                    {
+                        var xmlTrans = XmlUtil.ConvertToXml_Store(partTransaction);
+                        ct.Database.ExecuteSqlRaw("sp_PMS062_SaveCheckJobTransaction {0}, {1}, {2}, {3}, {4}, {5}, {6}",
+                            hid,
+                            h.CHECK_REP_NO,
+                            h.TEST_DATE,
+                            h.MACHINE_NO,
+                            xmlTrans,
+                            userCd,
+                            Constant.DEFAULT_MACHINE
+                        );
+                    }
                 }
                 #endregion
 
                 #region approver
-                //if (approver != null)
-                //{
-                //    ct.sp_PMS062_SaveApprover(
-                //        hid,
-                //        String.Join(",", approver)
-                //    );
-                //}
+                if (approver != null)
+                {
+                    ct.Database.ExecuteSqlRaw("sp_PMS062_SaveApprover {0}, {1}",
+                        hid,
+                        String.Join(",", approver)
+                    );
+                }
 
-                //if (approveHistory != null)
-                //{
-                //    ct.sp_Common_InsertApproveHistory(
-                //        approveHistory.APPROVE_ID,
-                //        approveHistory.DOCUMENT_HID,
-                //        approveHistory.DOCUMENT_DID,
-                //        approveHistory.SourceType,
-                //        approveHistory.DocumentNo,
-                //        approveHistory.APPROVE_LEVEL,
-                //        approveHistory.APPROVE_STATUS,
-                //        approveHistory.REMARK,
-                //        user
-                //    );
+                if (approveHistory != null)
+                {
+                    ct.Database.ExecuteSqlRaw("sp_Common_InsertApproveHistory {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}",
+                        approveHistory.APPROVE_ID,
+                        approveHistory.DOCUMENT_HID,
+                        approveHistory.DOCUMENT_DID,
+                        approveHistory.SourceType,
+                        approveHistory.DocumentNo,
+                        approveHistory.APPROVE_LEVEL,
+                        approveHistory.APPROVE_STATUS,
+                        approveHistory.REMARK,
+                        userCd
+                    );
 
-                //}
+                }
                 #endregion
 
                 trans.Complete();
@@ -299,6 +331,9 @@ namespace FLEX.API.Modules.Services.PMS
 
             if (testDate == null)
                 return result;
+
+            if (onhand == null)
+                onhand = PMS062_GetItemOnhandAtDate(parts, hid, testDate.Value);
 
             var partInv = ConvertToInventoryUnit(parts);
             //var onhand = mSvc.PMS062_GetItemOnhandAtDate(parts, hid, date.Value);
@@ -328,11 +363,11 @@ namespace FLEX.API.Modules.Services.PMS
         private List<PMS062_ConvertToInventoryUnit_Result> ConvertToInventoryUnit(List<PMS062_GetJobPmPart_Result> parts)
         {
             var xml = XmlUtil.ConvertToXml_Store(parts);
-            var result = ct.sp_PMS062_ConvertToInventoryUnit.FromSqlRaw("sp_PMS062_ConvertToInventoryUnit {0}",xml).ToList();
+            var result = ct.sp_PMS062_ConvertToInventoryUnit.FromSqlRaw("sp_PMS062_ConvertToInventoryUnit {0}", xml).ToList();
             return result;
         }
 
-        public ErrorMessage Validate_PMS062(PMS061_DTO data)
+        public bool Validate_PMS062(PMS061_DTO data)
         {
             var partData = data.PmParts.Where(p => p.USED_QTY > 0).ToList();
             var parts = partData.Select(p => new PMS062_GetJobPmPart_Result()
@@ -346,29 +381,21 @@ namespace FLEX.API.Modules.Services.PMS
 
             if (partData.Count > 0)
             {
-                var error = ValidateOnHand(data.Header.CHECK_REPH_ID, DateTime.Today, parts);
-                if (error != null)
-                {
-                    return error;
-                }
+                ValidateOnHand(data.Header.CHECK_REPH_ID, DateTime.Today, parts);
 
                 if (DateTime.Today != data.Header.TEST_DATE)
                 {
-                    error = ValidateOnHand(data.Header.CHECK_REPH_ID, data.Header.TEST_DATE, parts);
-                    if (error != null)
-                    {
-                        return error;
-                    }
+                    ValidateOnHand(data.Header.CHECK_REPH_ID, data.Header.TEST_DATE, parts);
                 }
             }
 
-            return null;
+            return true;
         }
 
-        private ErrorMessage ValidateOnHand(string CHECK_REPH_ID, DateTime? date, List<PMS062_GetJobPmPart_Result> parts)
+        private bool ValidateOnHand(string CHECK_REPH_ID, DateTime? date, List<PMS062_GetJobPmPart_Result> parts)
         {
             if (date == null)
-                return null;
+                return true;
 
             var mOnhand = PMS062_GetItemOnhandAtDate(parts.ToList(), CHECK_REPH_ID, date.Value);
 
@@ -391,10 +418,10 @@ namespace FLEX.API.Modules.Services.PMS
             {
                 //MessageDialogUtil.ShowBusiness(this, MessageCode.eValidate.VLM0463, new object[] { String.Join(", ", errorItem) });
                 //return false;
-                return new ErrorMessage("VLM0463", new object[] { String.Join(", ", errorItem) });
+                throw new ServiceException("VLM0463", new object[] { String.Join(", ", errorItem) });
             }
 
-            return null;
+            return true;
 
 
         }
@@ -421,6 +448,131 @@ namespace FLEX.API.Modules.Services.PMS
             if (criteria.FilterItemCls != null) ItemCls = String.Join(",", criteria.FilterItemCls);
             if (criteria.FilterItemCategory != null) ItemCate = String.Join(",", criteria.FilterItemCategory);
             return ct.sp_DLG045_ItemFindDialogWithParam.FromSqlRaw("sp_DLG045_ItemFindDialogWithParam {0}, {1}, {2}, {3}", criteria.ShowDeleted, criteria.ShowStopItem, ItemCls, ItemCate).ToList();
+        }
+
+        public string PMS062_SendToApprove(PMS061_DTO data)
+        {
+            // validate data
+            Validate_PMS062(data);
+
+            //validate approve route
+            var approveList = ct.PMS062_GetApproveRoute.FromSqlRaw("sp_PMS062_GetApproveRoute {0}", data.Header.MACHINE_NO).ToList();
+            if (approveList.Count == 0)
+            {
+                throw new ServiceException("VLM0439");
+            }
+
+            var approveHistory = GetApproveHistory(data.Header, data.CurrentUser);
+            SetApproverData(data.Header, approveList);
+            approveHistory.APPROVE_STATUS = data.Header.STATUSID;
+            if (data.Header.STATUSID == STATUS_COMPLETE)
+            {
+                var partTransaction = GetPartTransaction(data.PmParts, data.Header.CHECK_REPH_ID, data.Header.TEST_DATE, null);
+                data.Header.CHECK_REPH_ID = PMS062_SaveAll(
+                    data.Header,
+                    null,
+                    null,
+                    null,
+                    partTransaction,
+                    GetApprover(data.Header, approveList),
+                    approveHistory,
+                    data.CurrentUser
+                );
+            }
+            else
+            {
+                data.Header.CHECK_REPH_ID = PMS062_SaveAll(
+                    data.Header,
+                    null,
+                    null,
+                    null,
+                    null,
+                    GetApprover(data.Header, approveList),
+                    approveHistory,
+                    data.CurrentUser
+                );
+            }
+
+            return data.Header.CHECK_REPH_ID;
+        }
+
+        private List<string> GetApprover(PMS061_GetCheckJobH_Result mData, List<PMS062_GetApproveRoute_Result> approveList)
+        {
+            if (mData.CUR_LEVEL == null)
+                return new List<string>();
+
+            return approveList.Where(a => a.APPROVE_LEVEL == mData.CUR_LEVEL).Select(a => a.APPROVE_USER).ToList();
+        }
+
+        private ApproveHistory GetApproveHistory(PMS061_GetCheckJobH_Result mData, string user)
+        {
+            return new ApproveHistory()
+            {
+                APPROVE_ID = mData.APPROVE_ID,
+                APPROVE_LEVEL = mData.CUR_LEVEL,
+                APPROVE_STATUS = null,
+                APPROVE_USER = user,
+                DocumentNo = mData.CHECK_REPH_ID,
+                DOCUMENT_DID = null,
+                DOCUMENT_HID = null,
+                REMARK = null,
+                SourceType = "PMS"
+            };
+        }
+
+        private void SetApproverData(PMS061_GetCheckJobH_Result mData, List<PMS062_GetApproveRoute_Result> approveList)
+        {
+            var approve = approveList.First();
+            //var maxLevel = approveList.Select(a => a.APPROVE_LEVEL).Max()??0;
+
+            mData.APPROVE_ID = approve.APPROVE_ID;
+            mData.CUR_LEVEL = approveList
+                                .Where(a => (a.APPROVE_LEVEL ?? 0) > (mData.CUR_LEVEL ?? 0))
+                                .Select(a => a.APPROVE_LEVEL)
+                                .Min() ?? 0;
+            mData.NEXT_LEVEL = approveList
+                                .Where(a => (a.APPROVE_LEVEL ?? 0) > (mData.CUR_LEVEL ?? 0))
+                                .Select(a => a.APPROVE_LEVEL)
+                                .Min() ?? 0;
+            mData.STATUSID = mData.CUR_LEVEL == 0 ? STATUS_COMPLETE : STATUS_DURING_APPROVE;
+        }
+
+        public string PMS062_Revise(PMS061_DTO data)
+        {
+            // validate data
+            //Validate_PMS062(data);
+            var approveHistory = GetApproveHistory(data.Header, data.CurrentUser);
+            data.Header.APPROVE_ID = null;
+            data.Header.CUR_LEVEL = null;
+            data.Header.NEXT_LEVEL = null;
+            data.Header.STATUSID = STATUS_REVISE;
+            //data.Header.REVISE_REMARK = dlg.Remark;
+
+            approveHistory.APPROVE_STATUS = data.Header.STATUSID;
+            approveHistory.REMARK = data.Header.REVISE_REMARK;
+
+            data.Header.CHECK_REPH_ID = PMS062_SaveAll(
+                data.Header,
+                null,
+                null,
+                null,
+                null,
+                new List<string>(),
+                approveHistory,
+                data.CurrentUser
+            );
+
+            return data.Header.CHECK_REPH_ID;
+        }
+
+        public void PMS062_Cancel(PMS061_DTO data)
+        {
+            ct.Database.ExecuteSqlRaw("sp_PMS062_CancelMachineCheckJob_PM {0}, {1}, {2}, {3}",
+                   data.Header.CHECK_REPH_ID,
+                   data.Header.CANCEL_REMARK,
+                   data.CurrentUser,
+                   Constant.DEFAULT_MACHINE
+                );
         }
     }
 }

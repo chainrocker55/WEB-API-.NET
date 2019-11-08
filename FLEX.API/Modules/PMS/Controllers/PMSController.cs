@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Transactions;
 using FLEX.API.Common.Utils;
+using FLEX.API.Models;
 using FLEX.API.Modules.PMS.Models;
 using FLEX.API.Modules.Services.PMS;
 using Microsoft.AspNetCore.Authorization;
@@ -168,16 +169,54 @@ namespace FLEX.API.Modules.PMS.Controllers
         {
             try
             {
-                // validate data
-                var error = svc.Validate_PMS062(data);
-                if (error != null)
-                {
-                    return BadRequest(error);
-                }
-
-                var result = svc.PMS062_SaveData(data, data.CurrentUser);
-                //return Ok(new List<string>() { result }); ;
+                var result = svc.PMS062_SaveData(data);
                 return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.GetBaseException());
+            }
+        }
+
+        [HttpPost]
+        public ActionResult<string> PMS062_SendToApprove(PMS061_DTO data)
+        {
+            try
+            {
+                var result = svc.PMS062_SendToApprove(data);
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.GetBaseException());
+            }
+        }
+
+
+        [HttpPost]
+        public ActionResult<string> PMS062_Revise(PMS061_DTO data)
+        {
+            try
+            {
+                var result = svc.PMS062_Revise(data);
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.GetBaseException());
+            }
+        }
+
+        [HttpPost]
+        public ActionResult PMS062_Cancel(PMS061_DTO data)
+        {
+            try
+            {
+               svc.PMS062_Cancel(data);
+
+                return Ok();
             }
             catch (Exception ex)
             {
