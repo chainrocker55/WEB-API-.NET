@@ -21,6 +21,7 @@ namespace FLEX.API.Modules.Services.PMS
         List<PMS061_GetCheckJobPersonInCharge_Result> sp_PMS061_GetCheckJobPersonInCharge(string CHECK_REPH_ID, string MACHINE_NO);
         string PMS061_SaveData(PMS061_DTO data, string user);
         string PMS062_SaveData(PMS061_DTO data);
+        string PMS063_SaveData(PMS063_DTO data);
         string GetMachineDefaultComponent(string MACHINE_NO);
         List<PMS062_GetJobPmChecklist_Result> sp_PMS062_GetJobPmChecklist(string CHECK_REPH_ID, string MACHINE_NO);
         List<PMS062_GetJobPmPart_Result> sp_PMS062_GetJobPmPart(string CHECK_REPH_ID, string MCBOM_CD, string PARTS_LOC_CD);
@@ -29,6 +30,12 @@ namespace FLEX.API.Modules.Services.PMS
         string PMS062_SendToApprove(PMS061_DTO data);
         string PMS062_Revise(PMS061_DTO data);
         void PMS062_Cancel(PMS061_DTO data);
+
+        List<PMS063_GetCrHeader_Result> sp_PMS063_GetCrHeader(string CHECK_REPH_ID);
+        List<PMS063_GetJobCrPart_Result> sp_PMS063_GetJobCrPart(string CHECK_REPH_ID, int? detailType);
+        List<PMS063_GetPersonalChecklist_Result> sp_PMS063_GetPersonalChecklist(string CHECK_REPH_ID);
+        List<PMS063_GetJobCrCheck_Result> sp_PMS063_GetJobCrCheck(string cHECK_REPH_ID);
+        List<PMS063_GetJobCrAfterService_Result> sp_PMS063_GetJobCrAfterService(string cHECK_REPH_ID);
     }
 
     public class PMSDataSvc : IPMSDataSvc
@@ -82,6 +89,12 @@ namespace FLEX.API.Modules.Services.PMS
         {
             return ct.sp_PMS061_GetCheckJobH.FromSqlRaw("sp_PMS061_GetCheckJobH {0}", CHECK_REPH_ID).ToList();
         }
+
+        public List<PMS063_GetCrHeader_Result> sp_PMS063_GetCrHeader(string CHECK_REPH_ID)
+        {
+            return ct.sp_PMS063_GetCrHeader.FromSqlRaw("sp_PMS063_GetCrHeader {0}", CHECK_REPH_ID).ToList();
+        }
+
         public List<PMS061_GetCheckJobH_OH_Result> sp_PMS061_GetCheckJobH_OH(string CHECK_REPH_ID)
         {
             return ct.sp_PMS061_GetCheckJobH_OH.FromSqlRaw("sp_PMS061_GetCheckJobH_OH {0}", CHECK_REPH_ID).ToList();
@@ -101,7 +114,14 @@ namespace FLEX.API.Modules.Services.PMS
 
         public string GetMachineDefaultComponent(string MACHINE_NO)
         {
-            return ct.sp_PMS062_GetMachineDefaultComponent.FromSqlRaw("sp_PMS062_GetMachineDefaultComponent {0}", MACHINE_NO).ToList().FirstOrDefault()?.VALUE;
+            try
+            {
+                return ct.sp_PMS062_GetMachineDefaultComponent.FromSqlRaw("sp_PMS062_GetMachineDefaultComponent {0}", MACHINE_NO).ToList()?.FirstOrDefault()?.VALUE;
+            }
+            catch(Exception)
+            {
+                return null;
+            }
 
         }
 
@@ -392,6 +412,21 @@ namespace FLEX.API.Modules.Services.PMS
             return true;
         }
 
+        public bool Validate_PMS063(string CHECK_REPH_ID, DateTime? COMPLETE_DATE, List<PMS062_GetJobPmPart_Result> parts)
+        {
+            if (parts.Count > 0)
+            {
+                ValidateOnHand(CHECK_REPH_ID, DateTime.Today, parts);
+
+                if (DateTime.Today != COMPLETE_DATE)
+                {
+                    ValidateOnHand(CHECK_REPH_ID, COMPLETE_DATE, parts);
+                }
+            }
+
+            return true;
+        }
+
         private bool ValidateOnHand(string CHECK_REPH_ID, DateTime? date, List<PMS062_GetJobPmPart_Result> parts)
         {
             if (date == null)
@@ -573,6 +608,421 @@ namespace FLEX.API.Modules.Services.PMS
                    data.CurrentUser,
                    Constant.DEFAULT_MACHINE
                 );
+        }
+
+        public List<PMS063_GetJobCrPart_Result> sp_PMS063_GetJobCrPart(string CHECK_REPH_ID, int? detailType)
+        {
+            return ct.sp_PMS063_GetJobCrPart.FromSqlRaw("sp_PMS063_GetJobCrPart {0}, {1}",
+                CHECK_REPH_ID,
+                detailType
+            ).ToList();
+        }
+
+        public List<PMS063_GetPersonalChecklist_Result> sp_PMS063_GetPersonalChecklist(string CHECK_REPH_ID)
+        {
+            return ct.sp_PMS063_GetPersonalChecklist.FromSqlRaw("sp_PMS063_GetPersonalChecklist {0}",
+                CHECK_REPH_ID
+            ).ToList();
+        }
+
+        public List<PMS063_GetJobCrCheck_Result> sp_PMS063_GetJobCrCheck(string CHECK_REPH_ID)
+        {
+            return ct.sp_PMS063_GetJobCrCheck.FromSqlRaw("sp_PMS063_GetJobCrCheck {0}",
+                CHECK_REPH_ID
+            ).ToList();
+        }
+
+        public List<PMS063_GetJobCrAfterService_Result> sp_PMS063_GetJobCrAfterService(string CHECK_REPH_ID)
+        {
+            return ct.sp_PMS063_GetJobCrAfterService.FromSqlRaw("sp_PMS063_GetJobCrAfterService {0}",
+                CHECK_REPH_ID
+            ).ToList();
+        }
+
+        public string PMS063_SaveData(PMS063_DTO data)
+        {
+            // validate data
+            var partData = data.Parts.Where(p => p.OUT_USEDQTY > 0 || p.REQUEST_QTY > 0).ToList();
+            var parts = partData.Select(p => new PMS062_GetJobPmPart_Result()
+            {
+                PARTS_ITEM_CD = p.ITEM_CD,
+                PARTS_ITEM_DESC = p.ITEM_DESC,
+                PARTS_LOC_CD = p.LOC_CD,
+                UNITCODE = p.UNITCODE,
+                USED_QTY = p.OUT_USEDQTY
+            }).ToList();
+            Validate_PMS063(data.Header.CHECK_REPH_ID, data.Header.COMPLETE_DATE, parts);
+
+            // get transaction           
+            var partTransaction = GetPartTransaction(parts, data.Header.CHECK_REPH_ID, data.Header.TEST_DATE, null);
+            return PMS063_SaveData(
+                data.Header,
+                data.PersonInCharge,
+                data.Tools,
+                data.Parts,
+                partTransaction,
+                data.PersonalChecklist,
+                data.Check,
+                null,
+                null,
+                data.CurrentUser
+            );
+        }
+
+        public string PMS063_SaveData(
+            PMS063_GetCrHeader_Result h,
+            List<PMS061_GetCheckJobPersonInCharge_Result> personInCharge,
+            List<PMS063_GetJobCrPart_Result> tools,
+            List<PMS063_GetJobCrPart_Result> parts,
+            List<PMS062_Transaction> partTransaction,
+            List<PMS063_GetPersonalChecklist_Result> personalChecklist,
+            PMS063_GetJobCrCheck_Result crCheck,
+            List<string> approver,
+            ApproveHistory approveHistory,
+            string userCd)
+        {
+
+            using (var trans = new TransactionScope())
+            {
+                var hid = ct.PMS061_SaveData.FromSqlRaw("sp_PMS061_InsertOrUpdateCheckJobHeader {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, {17}, {18}, {19}, {20}, {21}, {22}, {23}, {24}, {25}, {26}, {27}, {28}",
+                    h.CHECK_REPH_ID,
+                    h.CHECK_REP_NO,
+                    h.MACHINE_SCHEDULEID,
+                    h.MACHINE_NO,
+                    h.MACHINE_NAME,
+                    h.PLAN_DATE,
+                    h.REQUEST_DATE,
+                    h.COMPLETE_DATE,
+                    h.COMPLETE_TIME,
+                    h.TEST_DATE,
+                    h.MACHINE_LOC_CD,
+                    h.MACHINE_LOC,
+                    h.APPROVE_ID,
+                    h.CUR_LEVEL,
+                    h.NEXT_LEVEL,
+                    h.PERIOD,
+                    h.PERIOD_ID,
+                    h.COMPLETE_MTN,
+                    h.COMPLETE_RQ,
+                    h.SCHEDULE_TYPEID,
+                    h.AUTO_CREATEFLAG,
+                    h.CHECK_REP_NO_REF,
+                    h.REVISE_REMARK,
+                    h.CANCEL_REMARK,
+                    h.PRINT_FLAG,
+                    h.STATUSID,
+                    h.DELETEFLAG,
+
+                    userCd,
+                    Constant.DEFAULT_MACHINE
+                ).ToList().FirstOrDefault()?.VALUE;
+
+
+
+                #region person in charge      
+                if (personInCharge != null)
+                {
+                    for (int i = 0; i < personInCharge.Count; i++)
+                    {
+                        var item = personInCharge[i];
+                        item.CHECK_REPH_ID = hid;
+                        item.SEQ = i + 1;
+                    }
+
+                    var xml = XmlUtil.ConvertToXml_Store(personInCharge);
+                    ct.Database.ExecuteSqlRaw("sp_PMS061_InsertOrUpdateCheckJobPersonInCharge {0}, {1}, {2}, {3}",
+                        hid,
+                        xml,
+
+                        userCd,
+                        Constant.DEFAULT_MACHINE
+                    );
+                }
+                #endregion
+
+                #region TB_CHECK_JOBH_CR_RQ
+                ct.Database.ExecuteSqlRaw("sp_PMS063_InsertOrUpdateCheckJob_CR_RQ {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}",
+                    hid,
+                    h.START_REQ_DATE,
+                    h.START_REQ_TIME,
+                    h.TROUBLE,
+                    h.REQUESTER,
+                    h.POSITIONID,
+                    userCd,
+                        Constant.DEFAULT_MACHINE
+                );
+                #endregion
+
+                #region TB_CHECK_JOBH_CR_MTN
+                ct.Database.ExecuteSqlRaw("sp_PMS063_InsertOrUpdateCheckJob_CR_MTN {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, {17}, {18}, {19}, {20}",
+                    hid,
+                    h.REC_REQUEST_DATE,
+                    h.REC_REQUEST_TIME,
+                    h.SKIP_APPROVAL,
+                    h.ASSIGNER,
+                    h.ASSIGN_POSITIONID, h.APPROVE_RQ,
+                    h.IN_OUT_PROD_LINE,
+                    h.PROBLEM_DESC,
+                    h.REPAIR_METHOD,
+                    h.PREVENTIVE_METHOD,
+                    h.CAUSE_DELAY,
+                    h.CLEAN_FLAG,
+                    h.CLEAN_PERSON,
+                    h.CLEAN_POSITIONID,
+                    h.CLEAN_DATE,
+                    h.CHECK_MC_FLAG,
+                    h.CHECK_MC_PERSON,
+                    h.CHECK_MC_POSITIONID,
+                    h.CHECK_MC_DATE,
+
+                    userCd,
+                        Constant.DEFAULT_MACHINE
+                );
+                #endregion               
+
+                #region approver
+                if (approver != null)
+                {
+                    ct.Database.ExecuteSqlRaw("sp_PMS062_SaveApprover {0}, {1}",
+                        hid,
+                        String.Join(",", approver)
+                    );
+                }
+
+                if (approveHistory != null)
+                {
+                    ct.Database.ExecuteSqlRaw("sp_Common_InsertApproveHistory {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}",
+                        approveHistory.APPROVE_ID,
+                        approveHistory.DOCUMENT_HID,
+                        approveHistory.DOCUMENT_DID,
+                        approveHistory.SourceType,
+                        approveHistory.DocumentNo,
+                        approveHistory.APPROVE_LEVEL,
+                        approveHistory.APPROVE_STATUS,
+                        approveHistory.REMARK,
+                        userCd
+                    );
+
+                }
+                #endregion
+
+
+
+                #region part
+
+                var partData = new List<PMS063_GetJobCrPart_Result>();
+
+                if (tools != null)
+                {
+                    foreach (var item in tools)
+                    {
+                        item.DETAILTYPE = 1;
+                        partData.Add(item);
+                    }
+                }
+
+                if (parts != null)
+                {
+                    foreach (var item in parts)
+                    {
+                        item.DETAILTYPE = 2;
+                        partData.Add(item);
+                    }
+                }
+
+                if (partData.Count > 0)
+                {
+                    var xmlPart = XmlUtil.ConvertToXml_Store(partData);
+                    ct.Database.ExecuteSqlRaw("sp_PMS063_InsertOrUpdateCrPart {0}, {1}, {2}, {3}",
+                       hid,
+                        xmlPart,
+                        userCd,
+                        Constant.DEFAULT_MACHINE
+                    );
+                }
+
+                #endregion
+
+                #region transaction
+
+                if (partTransaction != null)
+                {
+                    var xmlTrans = XmlUtil.ConvertToXml_Store(partTransaction);
+                    ct.Database.ExecuteSqlRaw("sp_PMS062_SaveCheckJobTransaction  {0}, {1}, {2}, {3}, {4}, {5}, {6}",
+                        hid,
+                        h.CHECK_REP_NO,
+                        h.TEST_DATE,
+                        h.MACHINE_NO,
+                        xmlTrans,
+                        userCd,
+                        Constant.DEFAULT_MACHINE
+                    );
+                }
+                #endregion
+
+
+                #region personal checklist
+                if (personalChecklist != null)
+                {
+                    var xmlPH = XmlUtil.ConvertToXml_Store(personalChecklist);
+                    ct.Database.ExecuteSqlRaw("sp_PMS063_InsertOrUpdateCrPersonal {0}, {1}, {2}, {3}",
+                        hid,
+                        xmlPH,
+                        userCd,
+                        Constant.DEFAULT_MACHINE
+                    );
+                }
+                #endregion
+
+                #region TB_CHECK_JOBD_CR_CHECK 
+
+                if (crCheck != null)
+                {
+                    ct.Database.ExecuteSqlRaw("sp_PMS063_InsertOrUpdateCrCheck {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, {17}",
+                        hid,
+                        crCheck.CHECK_MC_ID,
+                        crCheck.CHECK_MC_DATE_FR,
+                        crCheck.CHECK_MC_DATE_TO,
+                        crCheck.CHECK_MC_PERSON,
+                        crCheck.CHECK_MC_POSITIONID,
+                        crCheck.CHECK_MC_DATE,
+                        crCheck.CLEAN_FLAG,
+                        crCheck.CLEAN_PERSON,
+                        crCheck.CLEAN_POSITIONID,
+                        crCheck.CLEAN_DATE,
+                        crCheck.QC_CHECK,
+                        crCheck.QC_CHECK_DESC,
+                        crCheck.QC_PERSON,
+                        crCheck.QC_POSITIONID,
+                        crCheck.QC_DATE,
+
+                        userCd,
+                        Constant.DEFAULT_MACHINE
+                    );
+                }
+
+                #endregion
+
+
+
+                #region complete
+                if (h.STATUSID == "F09")
+                {
+                    if (h.COMPLETE_DATE == null)
+                        throw new Exception("Complete Date is empty.");
+
+                    // generate job
+                    var machineData = ct.sp_PMS031_LoadMachineData.FromSqlRaw("sp_PMS031_LoadMachineData {0}", h.MACHINE_NO).ToList().FirstOrDefault();
+
+                    if (machineData?.CR_PERIOD1 != null && machineData?.CR_PERIOD1_ID != null)
+                    {
+
+                        var sch1 = ScheduleUtil.GetNextDate(new Schedule()
+                        {
+                            PERIOD = machineData?.CR_PERIOD1,
+                            PERIOD_ID = machineData?.CR_PERIOD1_ID,
+                            //DAYS = null,
+                            //END_DATE = null,
+                            //START_DATE = h.COMPLETE_DATE
+                        }, h.COMPLETE_DATE);
+                        var sch1_hid = GenerateAutoJob(ct, h, sch1, userCd);
+
+                        DateTime? sch2 = null;
+                        string sch2_id = null;
+                        if (machineData?.CR_PERIOD2 != null && machineData?.CR_PERIOD2_ID != null)
+                        {
+                            sch2 = ScheduleUtil.GetNextDate(new Schedule()
+                            {
+                                PERIOD = machineData?.CR_PERIOD2,
+                                PERIOD_ID = machineData?.CR_PERIOD2_ID,
+                                //DAYS = null,
+                                //END_DATE = null,
+                                //START_DATE = sch1
+                            }, sch1);
+
+                            sch2_id = GenerateAutoJob(ct, h, sch2.Value, userCd);
+                        }
+
+                        ct.Database.ExecuteSqlRaw("sp_PMS063_InsertOrUpdateCrAfterService {0}, {1}, {2}, {3}, {4}, {5}, {6}",
+                           hid,
+                           sch1,
+                           sch1_hid,
+                           sch2,
+                           sch2_id,
+
+                           userCd,
+                           Constant.DEFAULT_MACHINE
+
+                       );
+                    }
+
+                }
+
+                #endregion
+
+
+
+
+
+                trans.Complete();
+                return hid;
+            }
+
+
+
+        }
+
+        private string GenerateAutoJob(FLEXContext ct, PMS063_GetCrHeader_Result h, DateTime sch1, string userCd)
+        {
+            var sch1_hid = ct.PMS061_SaveData.FromSqlRaw("sp_PMS061_InsertOrUpdateCheckJobHeader {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, {17}, {18}, {19}, {20}, {21}, {22}, {23}, {24}, {25}, {26}, {27}, {28}",
+                null,
+                null,
+                null,
+                h.MACHINE_NO,
+                h.MACHINE_NAME,
+                sch1,
+                sch1,
+                null,
+                null,
+                null,
+                null,
+                h.MACHINE_LOC,
+                null,
+                null,
+                null,
+                null,
+                null,
+                "N",
+                "N",
+                4,
+                "Y",
+                null,
+                null,
+                null,
+                null,
+                "F01", // new
+                "N",
+
+                userCd,
+                Constant.DEFAULT_MACHINE
+            ).ToList().FirstOrDefault()?.VALUE;
+
+            ct.Database.ExecuteSqlRaw("sp_PMS061_InsertOrUpdateCheckJobH_OH {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}",
+                sch1_hid,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+
+                userCd,
+                Constant.DEFAULT_MACHINE
+
+            );
+
+            return sch1_hid;
         }
     }
 }

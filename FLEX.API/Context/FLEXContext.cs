@@ -40,6 +40,13 @@ namespace FLEX.API.Context
             modelBuilder.Entity<PMS062_Transaction>().HasNoKey();
             modelBuilder.Entity<PMS062_ConvertToInventoryUnit_Result>().HasNoKey();
             modelBuilder.Entity<PMS062_GetApproveRoute_Result>().HasNoKey();
+
+            modelBuilder.Entity<PMS063_GetCrHeader_Result>().HasNoKey();
+            modelBuilder.Entity<PMS063_GetJobCrAfterService_Result>().HasNoKey();
+            modelBuilder.Entity<PMS063_GetJobCrCheck_Result>().HasNoKey();
+            modelBuilder.Entity<PMS063_GetJobCrPart_Result>().HasNoKey();
+            modelBuilder.Entity<PMS063_GetPersonalChecklist_Result>().HasNoKey();
+            modelBuilder.Entity<PMS031_LoadMachineData_Result>().HasNoKey();
         }
 
         #region Flex
@@ -96,6 +103,12 @@ namespace FLEX.API.Context
         public DbSet<PMS062_GetItemOnhandAtDate_Result> sp_PMS062_GetItemOnhandAtDate { get; set; }
         public DbSet<PMS062_ConvertToInventoryUnit_Result> sp_PMS062_ConvertToInventoryUnit { get; set; }
         public DbSet<PMS062_GetApproveRoute_Result> PMS062_GetApproveRoute { get; set; }
+        public DbSet<PMS063_GetCrHeader_Result> sp_PMS063_GetCrHeader { get; set; }
+        public DbSet<PMS063_GetJobCrPart_Result> sp_PMS063_GetJobCrPart { get; set; }
+        public DbSet<PMS063_GetPersonalChecklist_Result> sp_PMS063_GetPersonalChecklist { get; set; }
+        public DbSet<PMS063_GetJobCrCheck_Result> sp_PMS063_GetJobCrCheck { get; set; }
+        public DbSet<PMS063_GetJobCrAfterService_Result> sp_PMS063_GetJobCrAfterService { get; set; }
+        public DbSet<PMS031_LoadMachineData_Result> sp_PMS031_LoadMachineData { get; set; }
         #endregion
 
     }

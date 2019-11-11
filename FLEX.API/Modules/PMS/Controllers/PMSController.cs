@@ -97,6 +97,64 @@ namespace FLEX.API.Modules.PMS.Controllers
         }
 
         [HttpPost]
+        public ActionResult<PMS063_DTO> sp_PMS063_LoadData(PMS060_CheckListAndRepairOrder_Result row)
+        {
+            if (row == null) return BadRequest();
+
+            PMS063_DTO data = new PMS063_DTO();
+            data.Header = svc.sp_PMS063_GetCrHeader(row.CHECK_REPH_ID).SingleOrDefault();
+            if (data.Header == null)
+            {
+                data.Header = new PMS063_GetCrHeader_Result();
+                data.Header.STATUSID = row.STATUSID;
+                data.Header.SCHEDULE_TYPEID = row.SCHEDULE_TYPEID;
+                data.Header.CHECK_REPH_ID = row.CHECK_REPH_ID;
+                data.Header.CHECK_REP_NO = row.CHECK_REP_NO;
+                data.Header.MACHINE_SCHEDULEID = row.MACHINE_SCHEDULEID;
+                data.Header.PLAN_DATE = row.PLAN_DATE;
+                data.Header.REQUEST_DATE = row.REQUEST_DATE;
+                data.Header.COMPLETE_DATE = row.COMPLETE_DATE;
+                data.Header.MACHINE_NO = row.MACHINE_NO;
+                data.Header.MACHINE_NAME = row.MACHINE_NAME;
+                data.Header.MACHINE_LOC = row.MACHINE_LOC;
+
+                data.Header.TEST_DATE = row.TEST_DATE;
+                data.Header.PERIOD = row.PERIOD;
+                data.Header.PERIOD_ID = row.PERIOD_ID;
+                data.Header.MACHINE_LOC_CD = row.MACHINE_LOC_CD;
+
+                data.DefaultComponent = svc.GetMachineDefaultComponent(data.Header.MACHINE_NO);
+
+            }
+
+            data.Check=svc.sp_PMS063_GetJobCrCheck(row.CHECK_REPH_ID).SingleOrDefault();
+            if (data.Check == null)
+                data.Check = new PMS063_GetJobCrCheck_Result();
+
+            data.AfterService = svc.sp_PMS063_GetJobCrAfterService(row.CHECK_REPH_ID).SingleOrDefault();
+            if (data.AfterService == null)
+                data.AfterService = new PMS063_GetJobCrAfterService_Result();
+
+            data.Tools = svc.sp_PMS063_GetJobCrPart(row.CHECK_REPH_ID, 1).ToList();
+            if (data.Tools == null)
+                data.Tools = new List<PMS063_GetJobCrPart_Result>();
+
+            data.Parts = svc.sp_PMS063_GetJobCrPart(row.CHECK_REPH_ID, 2).ToList();
+            if (data.Parts == null)
+                data.Parts = new List<PMS063_GetJobCrPart_Result>();
+
+            data.PersonalChecklist= svc.sp_PMS063_GetPersonalChecklist(row.CHECK_REPH_ID).ToList();
+            if (data.PersonalChecklist == null)
+                data.PersonalChecklist = new List<PMS063_GetPersonalChecklist_Result>();
+
+            data.PersonInCharge = svc.sp_PMS061_GetCheckJobPersonInCharge(row.CHECK_REPH_ID, row.MACHINE_NO).ToList();
+            if (data.PersonInCharge == null)
+                data.PersonInCharge = new List<PMS061_GetCheckJobPersonInCharge_Result>();
+
+            return Ok(data);
+        }
+
+        [HttpPost]
         public ActionResult<List<PMS062_GetJobPmChecklist_Result>> sp_PMS062_GetJobPmChecklist(PMS060_CheckListAndRepairOrder_Result row)
         {
             var result = svc.sp_PMS062_GetJobPmChecklist(row.CHECK_REPH_ID, row.MACHINE_NO);
@@ -109,7 +167,7 @@ namespace FLEX.API.Modules.PMS.Controllers
             var result = svc.sp_PMS062_GetJobPmPart(c.CHECK_REPH_ID, c.MCBOM_CD, c.PARTS_LOC_CD);
 
             // get in qty
-            if(result!=null)
+            if (result != null)
             {
                 var xml = XmlUtil.ConvertToXml_Store(result);
                 var InQty = svc.sp_PMS062_GetInQty(c.CHECK_REPH_ID, xml);
@@ -133,7 +191,7 @@ namespace FLEX.API.Modules.PMS.Controllers
         {
             try
             {
-                if(param==null)
+                if (param == null)
                 {
                     return Ok(new List<PMS062_GetInQty_Result>());
                 }
@@ -154,7 +212,7 @@ namespace FLEX.API.Modules.PMS.Controllers
         public ActionResult<string> PMS061_SaveData(PMS061_DTO data)
         {
             try
-            {               
+            {
                 var result = svc.PMS061_SaveData(data, data.CurrentUser);
                 return Ok(result);
             }
@@ -170,6 +228,21 @@ namespace FLEX.API.Modules.PMS.Controllers
             try
             {
                 var result = svc.PMS062_SaveData(data);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.GetBaseException());
+            }
+        }
+
+
+        [HttpPost]
+        public ActionResult<string> PMS063_SaveData(PMS063_DTO data)
+        {
+            try
+            {
+                var result = svc.PMS063_SaveData(data);
                 return Ok(result);
             }
             catch (Exception ex)
@@ -214,7 +287,7 @@ namespace FLEX.API.Modules.PMS.Controllers
         {
             try
             {
-               svc.PMS062_Cancel(data);
+                svc.PMS062_Cancel(data);
 
                 return Ok();
             }
