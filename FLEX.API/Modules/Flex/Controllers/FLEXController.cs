@@ -81,5 +81,12 @@ namespace FLEX.API.Controllers
             var t = this.svc.GetToken(user);
             return Ok(t);
         }
+
+        [HttpGet("{userGroup}")]
+        public ActionResult<List<ActivePermissionValue>> GetActivePermission(string userGroup)
+        {
+            var result = svc.GetActivePermission(userGroup);
+            return Ok(result);
+        }
     }
 }
