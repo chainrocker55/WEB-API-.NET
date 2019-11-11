@@ -21,7 +21,6 @@ namespace FLEX.API.Modules.Services.PMS
         List<PMS061_GetCheckJobPersonInCharge_Result> sp_PMS061_GetCheckJobPersonInCharge(string CHECK_REPH_ID, string MACHINE_NO);
         string PMS061_SaveData(PMS061_DTO data, string user);
         string PMS062_SaveData(PMS061_DTO data);
-        string PMS063_SaveData(PMS063_DTO data);
         string GetMachineDefaultComponent(string MACHINE_NO);
         List<PMS062_GetJobPmChecklist_Result> sp_PMS062_GetJobPmChecklist(string CHECK_REPH_ID, string MACHINE_NO);
         List<PMS062_GetJobPmPart_Result> sp_PMS062_GetJobPmPart(string CHECK_REPH_ID, string MCBOM_CD, string PARTS_LOC_CD);
@@ -36,6 +35,13 @@ namespace FLEX.API.Modules.Services.PMS
         List<PMS063_GetPersonalChecklist_Result> sp_PMS063_GetPersonalChecklist(string CHECK_REPH_ID);
         List<PMS063_GetJobCrCheck_Result> sp_PMS063_GetJobCrCheck(string cHECK_REPH_ID);
         List<PMS063_GetJobCrAfterService_Result> sp_PMS063_GetJobCrAfterService(string cHECK_REPH_ID);
+
+        string PMS063_SaveData(PMS063_DTO data);
+        string PMS063_Confirm(PMS063_DTO data);
+        string PMS063_SendToApprove(PMS063_DTO data);
+        string PMS063_Approve(PMS063_DTO data);
+        string PMS063_Revise(PMS063_DTO data);
+        void PMS063_Cancel(PMS063_DTO data);
     }
 
     public class PMSDataSvc : IPMSDataSvc
@@ -118,7 +124,7 @@ namespace FLEX.API.Modules.Services.PMS
             {
                 return ct.sp_PMS062_GetMachineDefaultComponent.FromSqlRaw("sp_PMS062_GetMachineDefaultComponent {0}", MACHINE_NO).ToList()?.FirstOrDefault()?.VALUE;
             }
-            catch(Exception)
+            catch (Exception)
             {
                 return null;
             }
@@ -538,6 +544,13 @@ namespace FLEX.API.Modules.Services.PMS
 
             return approveList.Where(a => a.APPROVE_LEVEL == mData.CUR_LEVEL).Select(a => a.APPROVE_USER).ToList();
         }
+        private List<string> GetApprover(PMS063_GetCrHeader_Result mData, List<PMS062_GetApproveRoute_Result> approveList)
+        {
+            if (mData.CUR_LEVEL == null)
+                return new List<string>();
+
+            return approveList.Where(a => a.APPROVE_LEVEL == mData.CUR_LEVEL).Select(a => a.APPROVE_USER).ToList();
+        }
 
         private ApproveHistory GetApproveHistory(PMS061_GetCheckJobH_Result mData, string user)
         {
@@ -555,7 +568,40 @@ namespace FLEX.API.Modules.Services.PMS
             };
         }
 
+        private ApproveHistory GetApproveHistory(PMS063_GetCrHeader_Result mData, string user)
+        {
+            return new ApproveHistory()
+            {
+                APPROVE_ID = mData.APPROVE_ID,
+                APPROVE_LEVEL = mData.CUR_LEVEL,
+                APPROVE_STATUS = null,
+                APPROVE_USER = user,
+                DocumentNo = mData.CHECK_REPH_ID,
+                DOCUMENT_DID = null,
+                DOCUMENT_HID = null,
+                REMARK = null,
+                SourceType = "PMS"
+            };
+        }
+
         private void SetApproverData(PMS061_GetCheckJobH_Result mData, List<PMS062_GetApproveRoute_Result> approveList)
+        {
+            var approve = approveList.First();
+            //var maxLevel = approveList.Select(a => a.APPROVE_LEVEL).Max()??0;
+
+            mData.APPROVE_ID = approve.APPROVE_ID;
+            mData.CUR_LEVEL = approveList
+                                .Where(a => (a.APPROVE_LEVEL ?? 0) > (mData.CUR_LEVEL ?? 0))
+                                .Select(a => a.APPROVE_LEVEL)
+                                .Min() ?? 0;
+            mData.NEXT_LEVEL = approveList
+                                .Where(a => (a.APPROVE_LEVEL ?? 0) > (mData.CUR_LEVEL ?? 0))
+                                .Select(a => a.APPROVE_LEVEL)
+                                .Min() ?? 0;
+            mData.STATUSID = mData.CUR_LEVEL == 0 ? STATUS_COMPLETE : STATUS_DURING_APPROVE;
+        }
+
+        private void SetApproverData(PMS063_GetCrHeader_Result mData, List<PMS062_GetApproveRoute_Result> approveList)
         {
             var approve = approveList.First();
             //var maxLevel = approveList.Select(a => a.APPROVE_LEVEL).Max()??0;
@@ -655,7 +701,7 @@ namespace FLEX.API.Modules.Services.PMS
 
             // get transaction           
             var partTransaction = GetPartTransaction(parts, data.Header.CHECK_REPH_ID, data.Header.TEST_DATE, null);
-            return PMS063_SaveData(
+            return PMS063_SaveAll(
                 data.Header,
                 data.PersonInCharge,
                 data.Tools,
@@ -669,7 +715,44 @@ namespace FLEX.API.Modules.Services.PMS
             );
         }
 
-        public string PMS063_SaveData(
+        public string PMS063_Confirm(PMS063_DTO data)
+        {
+            if (data.Header.STATUSID == STATUS_NEW)
+                data.Header.STATUSID = STATUS_DURING_ASSIGN;
+            else if (data.Header.STATUSID == STATUS_DURING_ASSIGN)
+                data.Header.STATUSID = STATUS_RECEIVED;
+
+
+            //// validate data
+            //var partData = data.Parts.Where(p => p.OUT_USEDQTY > 0 || p.REQUEST_QTY > 0).ToList();
+            //var parts = partData.Select(p => new PMS062_GetJobPmPart_Result()
+            //{
+            //    PARTS_ITEM_CD = p.ITEM_CD,
+            //    PARTS_ITEM_DESC = p.ITEM_DESC,
+            //    PARTS_LOC_CD = p.LOC_CD,
+            //    UNITCODE = p.UNITCODE,
+            //    USED_QTY = p.OUT_USEDQTY
+            //}).ToList();
+            //Validate_PMS063(data.Header.CHECK_REPH_ID, data.Header.COMPLETE_DATE, parts);
+
+            //// get transaction           
+            //var partTransaction = GetPartTransaction(parts, data.Header.CHECK_REPH_ID, data.Header.TEST_DATE, null);
+
+            return PMS063_SaveAll(
+                data.Header,
+                data.PersonInCharge,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                data.CurrentUser
+            );
+        }
+
+        public string PMS063_SaveAll(
             PMS063_GetCrHeader_Result h,
             List<PMS061_GetCheckJobPersonInCharge_Result> personInCharge,
             List<PMS063_GetJobCrPart_Result> tools,
@@ -1024,5 +1107,163 @@ namespace FLEX.API.Modules.Services.PMS
 
             return sch1_hid;
         }
+
+        public string PMS063_SendToApprove(PMS063_DTO data)
+        {
+            //validate approve route
+            var approveList = ct.PMS062_GetApproveRoute.FromSqlRaw("sp_PMS062_GetApproveRoute {0}", data.Header.MACHINE_NO).ToList();
+            if (approveList.Count == 0)
+            {
+                throw new ServiceException("VLM0439");
+            }
+
+            var approveHistory = GetApproveHistory(data.Header, data.CurrentUser);
+            SetApproverData(data.Header, approveList);
+            approveHistory.APPROVE_STATUS = data.Header.STATUSID;
+
+            var partsData = data.Parts.Where(p => p.OUT_USEDQTY > 0 || p.REQUEST_QTY > 0).ToList();
+            var parts = partsData.Select(p => new PMS062_GetJobPmPart_Result()
+            {
+                PARTS_ITEM_CD = p.ITEM_CD,
+                PARTS_LOC_CD = p.LOC_CD,
+                UNITCODE = p.UNITCODE,
+                USED_QTY = p.OUT_USEDQTY
+            }).ToList();
+
+            Validate_PMS063(data.Header.CHECK_REPH_ID, data.Header.COMPLETE_DATE, parts);
+
+            var toolsData = data.Tools.Where(p => p.OUT_USEDQTY > 0 || p.REQUEST_QTY > 0).ToList();
+
+
+            var partTransaction = GetPartTransaction(parts, data.Header.CHECK_REPH_ID, data.Header.TEST_DATE, null);
+            data.Header.CHECK_REPH_ID = PMS063_SaveAll(
+                data.Header,
+                data.PersonInCharge,
+                toolsData,
+                partsData,
+                partTransaction,
+                null,
+                null,
+                GetApprover(data.Header, approveList),
+                null,
+                data.CurrentUser
+            );
+
+            return data.Header.CHECK_REPH_ID;
+        }
+
+        public string PMS063_Approve(PMS063_DTO data)
+        {
+            //validate approve route
+            var approveList = ct.PMS062_GetApproveRoute.FromSqlRaw("sp_PMS062_GetApproveRoute {0}", data.Header.MACHINE_NO).ToList();
+            if (approveList.Count == 0)
+            {
+                throw new ServiceException("VLM0439");
+            }
+
+            var approveHistory = GetApproveHistory(data.Header, data.CurrentUser);
+            SetApproverData(data.Header, approveList);
+            approveHistory.APPROVE_STATUS = data.Header.STATUSID;
+
+            if (data.Header.STATUSID == STATUS_COMPLETE)
+            {
+                var partsData = data.Parts.Where(p => p.OUT_USEDQTY > 0 || p.REQUEST_QTY > 0).ToList();
+                var parts = partsData.Select(p => new PMS062_GetJobPmPart_Result()
+                {
+                    PARTS_ITEM_CD = p.ITEM_CD,
+                    PARTS_LOC_CD = p.LOC_CD,
+                    UNITCODE = p.UNITCODE,
+                    USED_QTY = p.OUT_USEDQTY
+                }).ToList();
+                Validate_PMS063(data.Header.CHECK_REPH_ID, data.Header.COMPLETE_DATE, parts);
+                var toolsData = data.Tools.Where(p => p.OUT_USEDQTY > 0 || p.REQUEST_QTY > 0).ToList();
+                var partTransaction = GetPartTransaction(parts, data.Header.CHECK_REPH_ID, data.Header.TEST_DATE, null);
+
+                data.Header.CHECK_REPH_ID = PMS063_SaveAll(
+                    data.Header,
+                    null,
+                    null,
+                    null,
+                    partTransaction,
+                    data.PersonalChecklist,
+                    data.Check,
+                    GetApprover(data.Header, approveList),
+                    approveHistory,
+                    data.CurrentUser
+                );
+            }
+            else
+            {
+                data.Header.CHECK_REPH_ID = PMS063_SaveAll(
+                    data.Header,
+                    null,
+                    null,
+                    null,
+                    null,
+                    data.PersonalChecklist,
+                    data.Check,
+                    GetApprover(data.Header, approveList),
+                    approveHistory,
+                    data.CurrentUser
+                );
+            }
+
+            return data.Header.CHECK_REPH_ID;
+        }
+
+        public string PMS063_Revise(PMS063_DTO data)
+        {
+            // validate data
+            //Validate_PMS062(data);
+            var approveHistory = GetApproveHistory(data.Header, data.CurrentUser);
+            data.Header.APPROVE_ID = null;
+            data.Header.CUR_LEVEL = null;
+            data.Header.NEXT_LEVEL = null;
+            data.Header.STATUSID = STATUS_REVISE;
+            //data.Header.REVISE_REMARK = dlg.Remark;
+
+            approveHistory.APPROVE_STATUS = data.Header.STATUSID;
+            approveHistory.REMARK = data.Header.REVISE_REMARK;
+
+            data.Header.CHECK_REPH_ID = PMS063_SaveAll(
+                data.Header,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                new List<string>(),
+                approveHistory,
+                data.CurrentUser
+            );
+
+            return data.Header.CHECK_REPH_ID;
+        }
+
+        public void PMS063_Cancel(PMS063_DTO data)
+        {
+            ct.Database.ExecuteSqlRaw("sp_PMS063_CancelMachineCheckJob_CR {0}, {1}, {2}, {3}",
+                   data.Header.CHECK_REPH_ID,
+                   data.Header.CANCEL_REMARK,
+                   data.CurrentUser,
+                   Constant.DEFAULT_MACHINE
+                );
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     }
 }

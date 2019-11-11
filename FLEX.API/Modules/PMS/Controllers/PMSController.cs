@@ -208,6 +208,7 @@ namespace FLEX.API.Modules.PMS.Controllers
         }
 
 
+
         [HttpPost]
         public ActionResult<string> PMS061_SaveData(PMS061_DTO data)
         {
@@ -221,6 +222,8 @@ namespace FLEX.API.Modules.PMS.Controllers
                 return BadRequest(ex.GetBaseException());
             }
         }
+
+       
 
         [HttpPost]
         public ActionResult<string> PMS062_SaveData(PMS061_DTO data)
@@ -244,6 +247,77 @@ namespace FLEX.API.Modules.PMS.Controllers
             {
                 var result = svc.PMS063_SaveData(data);
                 return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.GetBaseException());
+            }
+        }
+
+        [HttpPost]
+        public ActionResult<string> PMS063_Confirm(PMS063_DTO data)
+        {
+            try
+            {
+                var result = svc.PMS063_Confirm(data);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.GetBaseException());
+            }
+        }
+        [HttpPost]
+        public ActionResult<string> PMS063_SendToApprove(PMS063_DTO data)
+        {
+            try
+            {
+                var result = svc.PMS063_SendToApprove(data);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.GetBaseException());
+            }
+        }
+        
+        [HttpPost]
+        public ActionResult<string> PMS063_Approve(PMS063_DTO data)
+        {
+            try
+            {
+                var result = svc.PMS063_Approve(data);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.GetBaseException());
+            }
+        }
+
+        [HttpPost]
+        public ActionResult<string> PMS063_Revise(PMS063_DTO data)
+        {
+            try
+            {
+                var result = svc.PMS063_Revise(data);
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.GetBaseException());
+            }
+        }
+
+        [HttpPost]
+        public ActionResult PMS063_Cancel(PMS063_DTO data)
+        {
+            try
+            {
+                svc.PMS063_Cancel(data);
+
+                return Ok();
             }
             catch (Exception ex)
             {
