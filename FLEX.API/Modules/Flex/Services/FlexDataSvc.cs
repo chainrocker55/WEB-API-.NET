@@ -25,6 +25,7 @@ namespace FLEX.API.Services
         TZ_USER_MS GetUserProfile(string UserCd);
         List<Notify> GetNotify(string UserCd);
         bool ResponseNotify(Notify noti);
+        List<ActivePermissionValue> GetActivePermission(string userGroup);
     }
 
     public class FlexDataSvc : IFlexDataSvc
@@ -163,6 +164,24 @@ namespace FLEX.API.Services
         {
             ct.Database.ExecuteSqlRaw("sp_Common_ResponseNotify {0}, {1}", noti.InfoDateTime, noti.Receiver);
             return true;
+        }
+        public List<ActivePermissionValue> GetActivePermission(string userGroup)
+        {
+            var P = ct.sp_SFM0061_GetStandardPermission.FromSqlRaw("sp_SFM0061_GetStandardPermission {0}", userGroup).ToList();
+            var AP = P.GroupBy(g => new
+            {
+                SCREEN_CD = g.SCREEN_CD,
+            }).Select(x => new ActivePermissionValue()
+            {
+                SCREEN_CD = x.Key.SCREEN_CD,
+                VIEW = x.Where(w => w.METHOD == "VIEW").Max(m => m.CAN_EXECUTE).GetValueOrDefault(),
+                ADD = x.Where(w => w.METHOD == "ADD").Max(m => m.CAN_EXECUTE).GetValueOrDefault(),
+                EDIT = x.Where(w => w.METHOD == "EDIT").Max(m => m.CAN_EXECUTE).GetValueOrDefault(),
+                DELETE = x.Where(w => w.METHOD == "DELETE").Max(m => m.CAN_EXECUTE).GetValueOrDefault(),
+                PRINT = x.Where(w => w.METHOD == "PRINT").Max(m => m.CAN_EXECUTE).GetValueOrDefault(),
+                CANCEL = x.Where(w => w.METHOD == "CANCEL").Max(m => m.CAN_EXECUTE).GetValueOrDefault(),
+            }).ToList();
+            return AP;
         }
     }
 }

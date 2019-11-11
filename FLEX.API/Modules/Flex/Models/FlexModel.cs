@@ -52,4 +52,16 @@ namespace FLEX.API.Models
             this.objParam = param;
         }
     }
+
+    public class ActivePermissionValue
+    {
+        public string SCREEN_CD { get; set; }
+        public bool VIEW { get; set; }
+        public bool ADD { get; set; }
+        public bool EDIT { get; set; }
+        public bool DELETE { get; set; }
+        public bool PRINT { get; set; }
+        public bool CANCEL { get; set; }
+    }
+
 }
