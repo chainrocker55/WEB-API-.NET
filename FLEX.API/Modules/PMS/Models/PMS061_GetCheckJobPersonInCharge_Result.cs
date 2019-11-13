@@ -49,6 +49,12 @@ namespace FLEX.API.Modules.PMS.Models
         {
             get;
             set;
+        }   
+        
+        public string DELETEFLAG
+        {
+            get;
+            set;
         }
     }
 }

@@ -133,6 +133,7 @@ namespace FLEX.API.Modules.Services.PMS
 
         public string PMS061_SaveData(PMS061_DTO data, string user)
         {
+            ValidateJobUpdateDate(data.Header.CHECK_REPH_ID, data.Header.LASTUPDATEDATETIME);
             using (var trans = new TransactionScope())
             {
                 var hid = ct.PMS061_SaveData.FromSqlRaw("sp_PMS061_InsertOrUpdateCheckJobHeader {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, {17}, {18}, {19}, {20}, {21}, {22}, {23}, {24}, {25}, {26}, {27}, {28}",
@@ -189,6 +190,7 @@ namespace FLEX.API.Modules.Services.PMS
                     var item = personInCharge[i];
                     item.CHECK_REPH_ID = hid;
                     item.SEQ = i + 1;
+                    item.DELETEFLAG = "N";
                 }
                 var xml = XmlUtil.ConvertToXml_Store(personInCharge);
                 ct.Database.ExecuteSqlRaw("sp_PMS061_InsertOrUpdateCheckJobPersonInCharge {0}, {1}, {2}, {3}",
@@ -205,6 +207,21 @@ namespace FLEX.API.Modules.Services.PMS
             }
         }
 
+        private void ValidateJobUpdateDate(string CHECK_REPH_ID, DateTime? LASTUPDATEDATETIME)
+        {
+            if (CHECK_REPH_ID != null)
+            {
+                var h = sp_PMS061_GetCheckJobH(CHECK_REPH_ID).FirstOrDefault();
+                if (h == null)
+                    return;
+
+                if (h.LASTUPDATEDATETIME != LASTUPDATEDATETIME)
+                {
+                    throw new ServiceException("VLM0352");
+                }
+            }
+        }
+
         public string PMS062_SaveData(PMS061_DTO data)
         {
             // validate data
@@ -213,13 +230,13 @@ namespace FLEX.API.Modules.Services.PMS
             // get transaction           
             var partTransaction = GetPartTransaction(data.PmParts, data.Header.CHECK_REPH_ID, data.Header.TEST_DATE, null);
 
-            return PMS062_SaveAll(data.Header, data.PersonInCharge, data.PmChecklist, data.PmParts, partTransaction, null, null, data.CurrentUser);
+            return PMS062_SaveAll(data.Header, data.PersonInCharge, data.PmChecklist, data.PmParts, partTransaction, null, null, data.CurrentUser, false);
 
         }
 
-        public string PMS062_SaveAll(PMS061_GetCheckJobH_Result h, List<PMS061_GetCheckJobPersonInCharge_Result> personInCharge, List<PMS062_GetJobPmChecklist_Result> checklist, List<PMS062_GetJobPmPart_Result> partsData, List<PMS062_Transaction> partTransaction, List<string> approver, ApproveHistory approveHistory, string userCd)
+        public string PMS062_SaveAll(PMS061_GetCheckJobH_Result h, List<PMS061_GetCheckJobPersonInCharge_Result> personInCharge, List<PMS062_GetJobPmChecklist_Result> checklist, List<PMS062_GetJobPmPart_Result> partsData, List<PMS062_Transaction> partTransaction, List<string> approver, ApproveHistory approveHistory, string userCd, bool sendNotification)
         {
-
+            ValidateJobUpdateDate(h.CHECK_REPH_ID, h.LASTUPDATEDATETIME);
             using (var trans = new TransactionScope())
             {
                 var hid = ct.PMS061_SaveData.FromSqlRaw("sp_PMS061_InsertOrUpdateCheckJobHeader {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, {17}, {18}, {19}, {20}, {21}, {22}, {23}, {24}, {25}, {26}, {27}, {28}",
@@ -265,6 +282,7 @@ namespace FLEX.API.Modules.Services.PMS
                         var item = personInCharge[i];
                         item.CHECK_REPH_ID = hid;
                         item.SEQ = i + 1;
+                        item.DELETEFLAG = "N";
                     }
 
                     var xml = XmlUtil.ConvertToXml_Store(personInCharge);
@@ -345,6 +363,12 @@ namespace FLEX.API.Modules.Services.PMS
 
                 }
                 #endregion
+
+
+                if (sendNotification)
+                {
+                    SendJobNotification(hid, "PMS062");
+                }
 
                 trans.Complete();
                 return hid;
@@ -517,7 +541,8 @@ namespace FLEX.API.Modules.Services.PMS
                     partTransaction,
                     GetApprover(data.Header, approveList),
                     approveHistory,
-                    data.CurrentUser
+                    data.CurrentUser,
+                    true
                 );
             }
             else
@@ -530,7 +555,8 @@ namespace FLEX.API.Modules.Services.PMS
                     null,
                     GetApprover(data.Header, approveList),
                     approveHistory,
-                    data.CurrentUser
+                    data.CurrentUser,
+                    true
                 );
             }
 
@@ -546,10 +572,10 @@ namespace FLEX.API.Modules.Services.PMS
         }
         private List<string> GetApprover(PMS063_GetCrHeader_Result mData, List<PMS062_GetApproveRoute_Result> approveList)
         {
-            if (mData.CUR_LEVEL == null)
+            if (mData.CUR_LEVEL == null || approveList == null)
                 return new List<string>();
 
-            return approveList.Where(a => a.APPROVE_LEVEL == mData.CUR_LEVEL).Select(a => a.APPROVE_USER).ToList();
+            return approveList?.Where(a => a.APPROVE_LEVEL == mData.CUR_LEVEL).Select(a => a.APPROVE_USER).ToList();
         }
 
         private ApproveHistory GetApproveHistory(PMS061_GetCheckJobH_Result mData, string user)
@@ -603,11 +629,11 @@ namespace FLEX.API.Modules.Services.PMS
 
         private void SetApproverData(PMS063_GetCrHeader_Result mData, List<PMS062_GetApproveRoute_Result> approveList)
         {
-            var approve = approveList.First();
+            var approve = approveList.FirstOrDefault();
             //var maxLevel = approveList.Select(a => a.APPROVE_LEVEL).Max()??0;
 
-            mData.APPROVE_ID = approve.APPROVE_ID;
-            mData.CUR_LEVEL = approveList
+            mData.APPROVE_ID = approve?.APPROVE_ID;
+            mData.CUR_LEVEL = approveList?
                                 .Where(a => (a.APPROVE_LEVEL ?? 0) > (mData.CUR_LEVEL ?? 0))
                                 .Select(a => a.APPROVE_LEVEL)
                                 .Min() ?? 0;
@@ -640,7 +666,8 @@ namespace FLEX.API.Modules.Services.PMS
                 null,
                 new List<string>(),
                 approveHistory,
-                data.CurrentUser
+                data.CurrentUser,
+                true
             );
 
             return data.Header.CHECK_REPH_ID;
@@ -654,6 +681,8 @@ namespace FLEX.API.Modules.Services.PMS
                    data.CurrentUser,
                    Constant.DEFAULT_MACHINE
                 );
+
+            SendJobNotification(data.Header.CHECK_REPH_ID, "PMS062");
         }
 
         public List<PMS063_GetJobCrPart_Result> sp_PMS063_GetJobCrPart(string CHECK_REPH_ID, int? detailType)
@@ -711,7 +740,8 @@ namespace FLEX.API.Modules.Services.PMS
                 data.Check,
                 null,
                 null,
-                data.CurrentUser
+                data.CurrentUser,
+                false
             );
         }
 
@@ -748,7 +778,8 @@ namespace FLEX.API.Modules.Services.PMS
                 null,
                 null,
                 null,
-                data.CurrentUser
+                data.CurrentUser,
+                true
             );
         }
 
@@ -762,9 +793,11 @@ namespace FLEX.API.Modules.Services.PMS
             PMS063_GetJobCrCheck_Result crCheck,
             List<string> approver,
             ApproveHistory approveHistory,
-            string userCd)
+            string userCd,
+            bool sendNotification)
         {
 
+            ValidateJobUpdateDate(h.CHECK_REPH_ID, h.LASTUPDATEDATETIME);
             using (var trans = new TransactionScope())
             {
                 var hid = ct.PMS061_SaveData.FromSqlRaw("sp_PMS061_InsertOrUpdateCheckJobHeader {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, {17}, {18}, {19}, {20}, {21}, {22}, {23}, {24}, {25}, {26}, {27}, {28}",
@@ -810,6 +843,7 @@ namespace FLEX.API.Modules.Services.PMS
                         var item = personInCharge[i];
                         item.CHECK_REPH_ID = hid;
                         item.SEQ = i + 1;
+                        item.DELETEFLAG = "N";
                     }
 
                     var xml = XmlUtil.ConvertToXml_Store(personInCharge);
@@ -991,13 +1025,13 @@ namespace FLEX.API.Modules.Services.PMS
                 #region complete
                 if (h.STATUSID == "F09")
                 {
-                    if (h.COMPLETE_DATE == null)
-                        throw new Exception("Complete Date is empty.");
+                    //if (h.COMPLETE_DATE == null)
+                    //    throw new Exception("Complete Date is empty.");
 
                     // generate job
                     var machineData = ct.sp_PMS031_LoadMachineData.FromSqlRaw("sp_PMS031_LoadMachineData {0}", h.MACHINE_NO).ToList().FirstOrDefault();
 
-                    if (machineData?.CR_PERIOD1 != null && machineData?.CR_PERIOD1_ID != null)
+                    if (machineData?.CR_PERIOD1 != null && machineData?.CR_PERIOD1_ID != null && h.COMPLETE_DATE != null)
                     {
 
                         var sch1 = ScheduleUtil.GetNextDate(new Schedule()
@@ -1042,6 +1076,11 @@ namespace FLEX.API.Modules.Services.PMS
                 }
 
                 #endregion
+
+                if(sendNotification)
+                {
+                    SendJobNotification(hid, "PMS063");
+                }
 
 
 
@@ -1110,11 +1149,15 @@ namespace FLEX.API.Modules.Services.PMS
 
         public string PMS063_SendToApprove(PMS063_DTO data)
         {
-            //validate approve route
-            var approveList = ct.PMS062_GetApproveRoute.FromSqlRaw("sp_PMS062_GetApproveRoute {0}", data.Header.MACHINE_NO).ToList();
-            if (approveList.Count == 0)
+            List<PMS062_GetApproveRoute_Result> approveList=null;
+            if ((data.Header.SKIP_APPROVAL??"N") == "N")
             {
-                throw new ServiceException("VLM0439");
+                //validate approve route
+                approveList = ct.PMS062_GetApproveRoute.FromSqlRaw("sp_PMS062_GetApproveRoute {0}", data.Header.MACHINE_NO).ToList();
+                if (approveList.Count == 0)
+                {
+                    throw new ServiceException("VLM0439");
+                }
             }
 
             var approveHistory = GetApproveHistory(data.Header, data.CurrentUser);
@@ -1146,7 +1189,8 @@ namespace FLEX.API.Modules.Services.PMS
                 null,
                 GetApprover(data.Header, approveList),
                 null,
-                data.CurrentUser
+                data.CurrentUser,
+                true
             );
 
             return data.Header.CHECK_REPH_ID;
@@ -1189,7 +1233,8 @@ namespace FLEX.API.Modules.Services.PMS
                     data.Check,
                     GetApprover(data.Header, approveList),
                     approveHistory,
-                    data.CurrentUser
+                    data.CurrentUser,
+                    true
                 );
             }
             else
@@ -1204,7 +1249,8 @@ namespace FLEX.API.Modules.Services.PMS
                     data.Check,
                     GetApprover(data.Header, approveList),
                     approveHistory,
-                    data.CurrentUser
+                    data.CurrentUser,
+                    true
                 );
             }
 
@@ -1235,7 +1281,8 @@ namespace FLEX.API.Modules.Services.PMS
                 null,
                 new List<string>(),
                 approveHistory,
-                data.CurrentUser
+                data.CurrentUser,
+                true
             );
 
             return data.Header.CHECK_REPH_ID;
@@ -1249,6 +1296,13 @@ namespace FLEX.API.Modules.Services.PMS
                    data.CurrentUser,
                    Constant.DEFAULT_MACHINE
                 );
+
+            SendJobNotification(data.Header.CHECK_REPH_ID, "PMS063");
+        }
+
+        public void SendJobNotification(string hid, string subScreenCd)
+        {
+            ct.Database.ExecuteSqlRaw("sp_PMS062_SendNotification {0}, {1}", hid, subScreenCd);
         }
 
 
