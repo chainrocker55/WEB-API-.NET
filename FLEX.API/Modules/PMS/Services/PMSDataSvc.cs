@@ -1153,7 +1153,7 @@ namespace FLEX.API.Modules.Services.PMS
             if ((data.Header.SKIP_APPROVAL??"N") == "N")
             {
                 //validate approve route
-                approveList = ct.PMS062_GetApproveRoute.FromSqlRaw("sp_PMS062_GetApproveRoute {0}", data.Header.MACHINE_NO).ToList();
+                approveList = ct.PMS062_GetApproveRoute.FromSqlRaw("sp_PMS063_GetApproveRoute {0}", data.Header.MACHINE_NO).ToList();
                 if (approveList.Count == 0)
                 {
                     throw new ServiceException("VLM0439");
@@ -1199,7 +1199,7 @@ namespace FLEX.API.Modules.Services.PMS
         public string PMS063_Approve(PMS063_DTO data)
         {
             //validate approve route
-            var approveList = ct.PMS062_GetApproveRoute.FromSqlRaw("sp_PMS062_GetApproveRoute {0}", data.Header.MACHINE_NO).ToList();
+            var approveList = ct.PMS062_GetApproveRoute.FromSqlRaw("sp_PMS063_GetApproveRoute {0}", data.Header.MACHINE_NO).ToList();
             if (approveList.Count == 0)
             {
                 throw new ServiceException("VLM0439");

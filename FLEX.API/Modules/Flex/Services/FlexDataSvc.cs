@@ -1,6 +1,7 @@
 ﻿using FLEX.API.Common;
 using FLEX.API.Context;
 using FLEX.API.Models;
+using FLEX.API.Modules.Flex.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -26,6 +27,7 @@ namespace FLEX.API.Services
         List<Notify> GetNotify(string UserCd);
         bool ResponseNotify(Notify noti);
         List<ActivePermissionValue> GetActivePermission(string userGroup);
+        List<SpecialPermissionResult> GetSpecialPermission(string userGroup, string screenCd);
     }
 
     public class FlexDataSvc : IFlexDataSvc
@@ -182,6 +184,12 @@ namespace FLEX.API.Services
                 CANCEL = x.Where(w => w.METHOD == "CANCEL").Max(m => m.CAN_EXECUTE).GetValueOrDefault(),
             }).ToList();
             return AP;
+        }
+
+        public List<SpecialPermissionResult> GetSpecialPermission(string userGroup, string screenCd )
+        {
+            var result = ct.sp_Common_GetSpecialPermission.FromSqlRaw("sp_Common_GetSpecialPermission {0}, {1}", userGroup, screenCd).ToList();
+            return result;
         }
     }
 }

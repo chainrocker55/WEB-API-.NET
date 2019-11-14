@@ -74,6 +74,13 @@ namespace FLEX.API.Modules.Flex.Controllers
             return Ok(result);
         }
 
+        [HttpGet("{userCd}")]
+        public ActionResult<List<ComboStringValue>> GetComboUserApproveLocation(string userCd)
+        {
+            var result = svc.GetComboUserApproveLocation(userCd);
+            return Ok(result);
+        }
+
         [HttpGet]
         public ActionResult<List<ComboIntValue>> GetComboSupplier()
         {

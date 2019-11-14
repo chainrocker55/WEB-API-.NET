@@ -23,6 +23,7 @@ namespace FLEX.API.Context
             modelBuilder.Entity<TZ_ACCESS_CONTROL_MS>().HasKey(c => new { c.GROUP_CD, c.SCREEN_CD, c.METHOD });
 
             modelBuilder.Entity<TB_CLASS_LIST_MS>().HasKey(c => new { c.CLS_INFO_CD, c.CLS_CD });
+            modelBuilder.Entity<SpecialPermissionResult>().HasNoKey();
 
             modelBuilder.Entity<PMS060_CheckListAndRepairOrder_Result>().HasNoKey();
             modelBuilder.Entity<PMS062_GetJobPmChecklist_Result>().HasNoKey();
@@ -70,6 +71,7 @@ namespace FLEX.API.Context
 
         public DbSet<ComboStringValue> sp_Combo_GetUserAndPosition { get; set; }
         public DbSet<ComboStringValue> sp_Combo_GetLocationMs { get; set; }
+        public DbSet<ComboStringValue> sp_Combo_GetUserApproveLocation { get; set; }
         public DbSet<ComboIntValue> sp_Combo_GetSupplier { get; set; }
         public DbSet<ComboIntValue> sp_Combo_GetMachineScheduleType { get; set; }
         public DbSet<ComboStringValue> sp_Combo_GetMachineStatus { get; set; }
@@ -87,6 +89,7 @@ namespace FLEX.API.Context
         public DbSet<sp_SFM031_LoadUser_Result> sp_SFM031_LoadUser { get; set; }
         public DbSet<SFM0061_GetStandardPermission_Result> sp_SFM0061_GetStandardPermission { get; set; }
         public DbSet<SFM0061_GetSpecialPermission_Result> sp_SFM0061_GetSpecialPermission { get; set; }
+        public DbSet<SpecialPermissionResult> sp_Common_GetSpecialPermission { get; set; }
         #endregion
 
         #region PMS

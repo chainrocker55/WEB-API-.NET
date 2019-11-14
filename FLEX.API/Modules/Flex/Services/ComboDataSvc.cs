@@ -20,6 +20,7 @@ namespace FLEX.API.Services
         List<ComboPersonInCharge_KIBUN_Result> GetComboPersonInCharge_KIBUN();
         List<ComboStringValue> GetComboUserWithPosition();
         List<ComboStringValue> GetComboLocation();
+        List<ComboStringValue> GetComboUserApproveLocation(string userCd);
         List<ComboIntValue> GetComboSupplier();
         List<ComboIntValue> GetComboMachineScheduleType();
         List<ComboStringValue> GetComboMachineStatus();
@@ -75,6 +76,10 @@ namespace FLEX.API.Services
         public List<ComboStringValue> GetComboLocation()
         {
             return this.ct.sp_Combo_GetLocationMs.FromSqlRaw("sp_Combo_GetLocationMs").ToList();
+        }
+        public List<ComboStringValue> GetComboUserApproveLocation(string userCd)
+        {
+            return this.ct.sp_Combo_GetUserApproveLocation.FromSqlRaw("sp_Combo_GetUserApproveLocation {0}", userCd).ToList();
         }
         public List<ComboIntValue> GetComboSupplier()
         {
