@@ -28,6 +28,7 @@ namespace FLEX.API.Services
         bool ResponseNotify(Notify noti);
         List<ActivePermissionValue> GetActivePermission(string userGroup);
         List<SpecialPermissionResult> GetSpecialPermission(string userGroup, string screenCd);
+        List<TBM_STATUS> GetStatusList();
     }
 
     public class FlexDataSvc : IFlexDataSvc
@@ -190,6 +191,11 @@ namespace FLEX.API.Services
         {
             var result = ct.sp_Common_GetSpecialPermission.FromSqlRaw("sp_Common_GetSpecialPermission {0}, {1}", userGroup, screenCd).ToList();
             return result;
+        }
+
+        public List<TBM_STATUS> GetStatusList()
+        {
+            return ct.TBM_STATUS.ToList();
         }
     }
 }

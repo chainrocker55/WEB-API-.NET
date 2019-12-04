@@ -66,6 +66,7 @@ namespace FLEX.API.Context
         public DbSet<TZ_MENU_SET_MS> TZ_MENU_SET_MS { get; set; }
         public DbSet<TBM_DIVISION> TBM_DIVISION { get; set; }
         public DbSet<TBM_POSITION> TBM_POSITION { get; set; }
+        public DbSet<TBM_STATUS> TBM_STATUS { get; set; }
 
         public DbSet<ComboPersonInCharge_KIBUN_Result> sp_Combo_GetPersonInCharge_KIBUN { get; set; }
 

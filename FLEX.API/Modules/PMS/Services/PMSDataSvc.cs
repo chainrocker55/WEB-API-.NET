@@ -1116,13 +1116,13 @@ namespace FLEX.API.Modules.Services.PMS
                 null,
                 "N",
                 "N",
-                4,
+                4, // for generate cr
                 "Y",
                 null,
                 null,
                 null,
                 null,
-                "F01", // new
+                "F03", // new
                 "N",
 
                 userCd,

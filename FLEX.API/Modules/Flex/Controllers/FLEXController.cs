@@ -96,6 +96,12 @@ namespace FLEX.API.Controllers
             return Ok(result);
         }
 
+        [HttpGet]
+        public ActionResult<List<TBM_STATUS>> GetStatusList()
+        {
+            var result = svc.GetStatusList();
+            return Ok(result);
+        }
 
     }
 }

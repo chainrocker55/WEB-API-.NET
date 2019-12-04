@@ -55,9 +55,7 @@ namespace FLEX.API.Modules.PMS.Controllers
                 if (row.SCHEDULE_TYPEID == 1)
                 {
                     data.Header.COMPLETE_DATE = row.COMPLETE_DATE;
-                }
-
-                if (row.SCHEDULE_TYPEID == 2)
+                }else if (row.SCHEDULE_TYPEID == 2)
                 {
                     data.Header.TEST_DATE = row.TEST_DATE;
                     data.Header.PERIOD = row.PERIOD;
@@ -65,7 +63,7 @@ namespace FLEX.API.Modules.PMS.Controllers
                     data.Header.MACHINE_LOC = row.MACHINE_LOC;
                     data.Header.MACHINE_LOC_CD = row.MACHINE_LOC_CD;
 
-                    data.DefaultComponent = svc.GetMachineDefaultComponent(data.Header.MACHINE_NO);
+                    
                 }
             }
 
@@ -78,6 +76,7 @@ namespace FLEX.API.Modules.PMS.Controllers
 
             if (data.Header.SCHEDULE_TYPEID == 2) // pm
             {
+                data.DefaultComponent = svc.GetMachineDefaultComponent(data.Header.MACHINE_NO);
                 data.PmChecklist = svc.sp_PMS062_GetJobPmChecklist(row.CHECK_REPH_ID, row.MACHINE_NO).ToList();
                 if (data.PmChecklist == null)
                     data.PmChecklist = new List<PMS062_GetJobPmChecklist_Result>();
@@ -123,9 +122,9 @@ namespace FLEX.API.Modules.PMS.Controllers
                 data.Header.PERIOD_ID = row.PERIOD_ID;
                 data.Header.MACHINE_LOC_CD = row.MACHINE_LOC_CD;
 
-                data.DefaultComponent = svc.GetMachineDefaultComponent(data.Header.MACHINE_NO);
-
             }
+
+            data.DefaultComponent = svc.GetMachineDefaultComponent(data.Header.MACHINE_NO);
 
             data.Check=svc.sp_PMS063_GetJobCrCheck(row.CHECK_REPH_ID).SingleOrDefault();
             if (data.Check == null)

@@ -120,5 +120,6 @@ namespace FLEX.API.Modules.SYS.Controllers
             svc.UpdatePermission(data, this.UserCd);
         }
         #endregion
+
     }
 }
