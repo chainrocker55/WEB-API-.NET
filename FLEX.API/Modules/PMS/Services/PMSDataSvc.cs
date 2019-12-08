@@ -42,6 +42,10 @@ namespace FLEX.API.Modules.Services.PMS
         string PMS063_Approve(PMS063_DTO data);
         string PMS063_Revise(PMS063_DTO data);
         void PMS063_Cancel(PMS063_DTO data);
+
+        PMS031_LoadMachineData_Result sp_PMS031_LoadMachineData(string MACHINE_NO);
+        List<PMS061_GetCheckJobPersonInCharge_Result> sp_PMS031_LoadMachineData(string CHECK_REPH_ID, string MACHINE_NO);
+        void PMS061_Cancel(PMS061_DTO data);
     }
 
     public class PMSDataSvc : IPMSDataSvc
@@ -1303,6 +1307,30 @@ namespace FLEX.API.Modules.Services.PMS
         public void SendJobNotification(string hid, string subScreenCd)
         {
             ct.Database.ExecuteSqlRaw("sp_PMS062_SendNotification {0}, {1}", hid, subScreenCd);
+        }
+
+        public PMS031_LoadMachineData_Result sp_PMS031_LoadMachineData(string MACHINE_NO)
+        {
+            var machineData = ct.sp_PMS031_LoadMachineData.FromSqlRaw("sp_PMS031_LoadMachineData {0}", MACHINE_NO).ToList().FirstOrDefault();
+            return machineData;
+        }
+
+        public List<PMS061_GetCheckJobPersonInCharge_Result> sp_PMS031_LoadMachineData(string CHECK_REPH_ID, string MACHINE_NO)
+        {
+            var result = ct.sp_PMS061_GetCheckJobPersonInCharge.FromSqlRaw("sp_PMS061_GetCheckJobPersonInCharge {0} {1}", CHECK_REPH_ID,  MACHINE_NO).ToList();
+            return result;
+        }
+
+        public void PMS061_Cancel(PMS061_DTO data)
+        {
+            ct.Database.ExecuteSqlRaw("sp_PMS061_CancelMachineCheckList {0}, {1}, {2}, {3}",
+                   data.Header.CHECK_REPH_ID,
+                   data.Header.CANCEL_REMARK,
+                   data.CurrentUser,
+                   Constant.DEFAULT_MACHINE
+                );
+
+            //SendJobNotification(data.Header.CHECK_REPH_ID, "PMS062");
         }
 
 

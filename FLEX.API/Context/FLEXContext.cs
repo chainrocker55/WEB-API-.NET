@@ -21,6 +21,7 @@ namespace FLEX.API.Context
         {
             modelBuilder.Entity<TZ_SCREEN_DETAIL_LANG_MS>().HasKey(c => new { c.CONTROL_CD, c.LANG_CD, c.SCREEN_CD });
             modelBuilder.Entity<TZ_ACCESS_CONTROL_MS>().HasKey(c => new { c.GROUP_CD, c.SCREEN_CD, c.METHOD });
+            modelBuilder.Entity<TZ_SYS_CONFIG>().HasKey(c => new { c.SYS_GROUP_ID, c.SYS_KEY });
 
             modelBuilder.Entity<TB_CLASS_LIST_MS>().HasKey(c => new { c.CLS_INFO_CD, c.CLS_CD });
             modelBuilder.Entity<SpecialPermissionResult>().HasNoKey();
@@ -87,6 +88,7 @@ namespace FLEX.API.Context
 
         #region System
         public DbSet<TB_CLASS_LIST_MS> TB_CLASS_LIST_MS { get; set; }
+        public DbSet<TZ_SYS_CONFIG> TZ_SYS_CONFIG { get; set; }
         public DbSet<sp_SFM031_LoadUser_Result> sp_SFM031_LoadUser { get; set; }
         public DbSet<SFM0061_GetStandardPermission_Result> sp_SFM0061_GetStandardPermission { get; set; }
         public DbSet<SFM0061_GetSpecialPermission_Result> sp_SFM0061_GetSpecialPermission { get; set; }
