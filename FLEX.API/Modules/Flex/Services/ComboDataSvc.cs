@@ -24,7 +24,7 @@ namespace FLEX.API.Services
         List<ComboIntValue> GetComboSupplier();
         List<ComboIntValue> GetComboMachineScheduleType();
         List<ComboStringValue> GetComboMachineStatus();
-        List<ComboStringValue> GetComboMachine();
+        List<ComboStringValue> GetComboMachine(bool? excludeDelete);
         List<ComboIntValue> GetComboPoNumber();
         List<ComboIntValue> GetComboMachinePeriod();
         List<ComboStringValue> GetComboMachineComponent(string MACHINE_NO);
@@ -96,9 +96,9 @@ namespace FLEX.API.Services
             return this.ct.sp_Combo_GetMachineStatus.FromSqlRaw("sp_Combo_GetMachineStatus").ToList();
 
         }
-        public List<ComboStringValue> GetComboMachine()
+        public List<ComboStringValue> GetComboMachine(bool? excludeDelete)
         {
-            return this.ct.sp_Combo_GetMachine_KIBUN.FromSqlRaw("sp_Combo_GetMachine_KIBUN").ToList();
+            return this.ct.sp_Combo_GetMachine_KIBUN.FromSqlRaw("sp_Combo_GetMachine_KIBUN {0}", excludeDelete).ToList();
 
         }
         public List<ComboIntValue> GetComboPoNumber()
