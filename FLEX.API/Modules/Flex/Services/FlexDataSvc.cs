@@ -29,6 +29,7 @@ namespace FLEX.API.Services
         List<ActivePermissionValue> GetActivePermission(string userGroup);
         List<SpecialPermissionResult> GetSpecialPermission(string userGroup, string screenCd);
         List<TBM_STATUS> GetStatusList();
+        TZ_SYS_CONFIG GetSysConfig(string SYS_GROUP_ID, string SYS_KEY);
     }
 
     public class FlexDataSvc : IFlexDataSvc
@@ -196,6 +197,12 @@ namespace FLEX.API.Services
         public List<TBM_STATUS> GetStatusList()
         {
             return ct.TBM_STATUS.ToList();
+        }
+
+        public TZ_SYS_CONFIG GetSysConfig(string SYS_GROUP_ID, string SYS_KEY)
+        {
+            var result = ct.TZ_SYS_CONFIG.ToList().Where(c=>c.SYS_GROUP_ID==SYS_GROUP_ID && c.SYS_KEY==SYS_KEY).FirstOrDefault();
+            return result;
         }
     }
 }

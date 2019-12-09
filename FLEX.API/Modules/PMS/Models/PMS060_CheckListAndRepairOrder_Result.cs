@@ -50,7 +50,8 @@ namespace FLEX.API.Modules.PMS.Models
 
 
         public DateTime? START_DATE { get; set; }
-        public DateTime? END_DATE { get; set; }
-        public int DAYS { get; set; }
+        public DateTime? DISPLAY_DATE { get; set; }
+        //public DateTime? END_DATE { get; set; }
+        //public int DAYS { get; set; }
     }
 }

@@ -105,9 +105,9 @@ namespace FLEX.API.Modules.Flex.Controllers
         //[HttpGet("{IsInculdeAll}")]
         //public ActionResult<List<ComboStringValue>> GetComboMachine(bool IsInculdeAll)
         [HttpGet]
-        public ActionResult<List<ComboStringValue>> GetComboMachine()
+        public ActionResult<List<ComboStringValue>> GetComboMachine(bool? excludeDelete)
         {
-            var result = svc.GetComboMachine();
+            var result = svc.GetComboMachine(excludeDelete);
             return Ok(result);
         }
         [HttpGet]

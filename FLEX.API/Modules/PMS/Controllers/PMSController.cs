@@ -10,6 +10,7 @@ using FLEX.API.Modules.Services.PMS;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json.Linq;
 
 namespace FLEX.API.Modules.PMS.Controllers
 {
@@ -95,7 +96,8 @@ namespace FLEX.API.Modules.PMS.Controllers
             }
 
 
-            data.PersonInCharge = svc.sp_PMS061_GetCheckJobPersonInCharge(row.CHECK_REPH_ID, row.MACHINE_NO).ToList();
+            //data.PersonInCharge = svc.sp_PMS061_GetCheckJobPersonInCharge(row.CHECK_REPH_ID, row.MACHINE_NO).ToList();
+            data.PersonInCharge = svc.sp_PMS061_GetCheckJobPersonInCharge(row.CHECK_REPH_ID, null).ToList();
             if (data.PersonInCharge == null)
                 data.PersonInCharge = new List<PMS061_GetCheckJobPersonInCharge_Result>();
 
@@ -403,6 +405,54 @@ namespace FLEX.API.Modules.PMS.Controllers
                 return BadRequest(ex.GetBaseException());
             }
         }
+
+        [HttpPost]
+        public ActionResult<PMS031_LoadMachineData_Result> LoadMachineData(SingleParam data)
+        {
+            try
+            {
+                var result = svc.sp_PMS031_LoadMachineData(data.StringValue);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.GetBaseException());
+            }
+        }
+
+        [HttpPost]
+        public ActionResult<List<PMS061_GetCheckJobPersonInCharge_Result>> GetCheckJobPersonInCharge(JObject data)
+        {
+            try
+            {
+                var CHECK_REPH_ID = data.GetValue("CHECK_REPH_ID").ToObject<string>();
+                var MACHINE_NO = data.GetValue("MACHINE_NO").ToObject<string>();
+
+                var result = svc.sp_PMS061_GetCheckJobPersonInCharge(CHECK_REPH_ID, MACHINE_NO).ToList();
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.GetBaseException());
+            }
+        }
+
+        [HttpPost]
+        public ActionResult PMS061_Cancel(PMS061_DTO data)
+        {
+            try
+            {
+                svc.PMS061_Cancel(data);
+
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.GetBaseException());
+            }
+        }
+
+
 
     }
 }

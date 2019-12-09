@@ -4,6 +4,7 @@ using FLEX.API.Models;
 using FLEX.API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json.Linq;
 
 namespace FLEX.API.Controllers
 {
@@ -102,6 +103,18 @@ namespace FLEX.API.Controllers
             var result = svc.GetStatusList();
             return Ok(result);
         }
+
+        [HttpPost]
+        public ActionResult<TZ_SYS_CONFIG> GetSysConfig(JObject data)
+        {
+            var SYS_GROUP_ID = data.GetValue("SYS_GROUP_ID").ToObject<string>();
+            var SYS_KEY = data.GetValue("SYS_KEY").ToObject<string>();
+
+            var result = svc.GetSysConfig(SYS_GROUP_ID, SYS_KEY);
+            return Ok(result);
+        }
+
+        
 
     }
 }
