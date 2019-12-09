@@ -98,8 +98,8 @@ namespace FLEX.API.Services
         }
         public List<ComboStringValue> GetComboMachine(bool? excludeDelete)
         {
-            return this.ct.sp_Combo_GetMachine_KIBUN.FromSqlRaw("sp_Combo_GetMachine_KIBUN {0}", excludeDelete).ToList();
-
+            var result = this.ct.sp_Combo_GetMachine_KIBUN.FromSqlRaw("sp_Combo_GetMachine_KIBUN").ToList();
+            return result;
         }
         public List<ComboIntValue> GetComboPoNumber()
         {

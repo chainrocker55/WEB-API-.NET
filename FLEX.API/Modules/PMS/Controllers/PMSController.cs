@@ -33,6 +33,13 @@ namespace FLEX.API.Modules.PMS.Controllers
         }
 
         [HttpPost]
+        public ActionResult<PMS060_UserDefaultValue> PMS060_GetUserDefaultValue(SingleParam USER_CD)
+        {
+            var result = svc.PMS060_GetUserDefaultValue(USER_CD.StringValue);
+            return Ok(result);
+        }
+
+        [HttpPost]
         public ActionResult<PMS061_DTO> sp_PMS061_GetCheckJob(PMS060_CheckListAndRepairOrder_Result row)
         {
             if (row == null) return BadRequest();

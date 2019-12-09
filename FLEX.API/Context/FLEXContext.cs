@@ -49,6 +49,7 @@ namespace FLEX.API.Context
             modelBuilder.Entity<PMS063_GetJobCrPart_Result>().HasNoKey();
             modelBuilder.Entity<PMS063_GetPersonalChecklist_Result>().HasNoKey();
             modelBuilder.Entity<PMS031_LoadMachineData_Result>().HasNoKey();
+            modelBuilder.Entity<PMS060_UserDefaultValue>().HasNoKey();
         }
 
         #region Flex
@@ -115,6 +116,8 @@ namespace FLEX.API.Context
         public DbSet<PMS063_GetJobCrCheck_Result> sp_PMS063_GetJobCrCheck { get; set; }
         public DbSet<PMS063_GetJobCrAfterService_Result> sp_PMS063_GetJobCrAfterService { get; set; }
         public DbSet<PMS031_LoadMachineData_Result> sp_PMS031_LoadMachineData { get; set; }
+
+        public DbSet<PMS060_UserDefaultValue> sp_PMS060_GetCheckDefaultValueByUser { get; set; }
         #endregion
 
     }
