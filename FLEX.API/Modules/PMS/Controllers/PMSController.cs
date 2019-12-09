@@ -33,9 +33,9 @@ namespace FLEX.API.Modules.PMS.Controllers
         }
 
         [HttpPost]
-        public ActionResult<PMS060_UserDefaultValue> PMS060_GetUserDefaultValue(string USER_CD)
+        public ActionResult<PMS060_UserDefaultValue> PMS060_GetUserDefaultValue(SingleParam USER_CD)
         {
-            var result = svc.PMS060_GetUserDefaultValue(USER_CD);
+            var result = svc.PMS060_GetUserDefaultValue(USER_CD.StringValue);
             return Ok(result);
         }
 

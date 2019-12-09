@@ -138,7 +138,7 @@ namespace FLEX.API.Modules.Services.PMS
 
         public PMS060_UserDefaultValue PMS060_GetUserDefaultValue(string USER_CD)
         {
-            var data = ct.sp_PMS060_GetCheckDefaultValueByUser.FromSqlRaw("sp_PMS060_GetCheckDefaultValueByUser {0}", USER_CD).FirstOrDefault();
+            var data = ct.sp_PMS060_GetCheckDefaultValueByUser.FromSqlRaw("sp_PMS060_GetCheckDefaultValueByUser {0}", USER_CD)?.ToList()?.FirstOrDefault();
             return data;
         }
         public string PMS061_SaveData(PMS061_DTO data, string user)
