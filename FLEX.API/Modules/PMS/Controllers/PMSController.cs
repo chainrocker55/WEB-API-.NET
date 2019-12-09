@@ -77,7 +77,7 @@ namespace FLEX.API.Modules.PMS.Controllers
 
             if (data.Header.SCHEDULE_TYPEID == 2) // pm
             {
-                data.DefaultComponent = svc.GetMachineDefaultComponent(data.Header.MACHINE_NO);
+                data.DefaultComponent = svc.sp_PMS062_GetMachineDefaultComponent(data.Header.MACHINE_NO);
                 data.PmChecklist = svc.sp_PMS062_GetJobPmChecklist(row.CHECK_REPH_ID, row.MACHINE_NO).ToList();
                 if (data.PmChecklist == null)
                     data.PmChecklist = new List<PMS062_GetJobPmChecklist_Result>();
@@ -126,7 +126,7 @@ namespace FLEX.API.Modules.PMS.Controllers
 
             }
 
-            data.DefaultComponent = svc.GetMachineDefaultComponent(data.Header.MACHINE_NO);
+            data.DefaultComponent = svc.sp_PMS062_GetMachineDefaultComponent(data.Header.MACHINE_NO);
 
             data.Check=svc.sp_PMS063_GetJobCrCheck(row.CHECK_REPH_ID).SingleOrDefault();
             if (data.Check == null)
@@ -373,19 +373,6 @@ namespace FLEX.API.Modules.PMS.Controllers
         }
 
         [HttpPost]
-        public ActionResult<string> GetMachineDefaultComponent(string MACHINE_NO)
-        {
-            try
-            {
-                var result = svc.GetMachineDefaultComponent(MACHINE_NO);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.GetBaseException());
-            }
-        }
-        [HttpPost]
         public ActionResult<List<DLG045_ItemFindDialogWithParam_Result>> GetItemFindDialogWithParam(DLG045_Search_Criteria criteria)
         {
             try
@@ -444,6 +431,25 @@ namespace FLEX.API.Modules.PMS.Controllers
                 return BadRequest(ex.GetBaseException());
             }
         }
+
+        [HttpPost]
+        public ActionResult<string> GetMachineDefaultComponent(SingleParam param)
+        {
+            try
+            {
+                var result = svc.sp_PMS062_GetMachineDefaultComponent(param.StringValue);
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.GetBaseException());
+            }
+        }
+
+       
+
+
 
 
 

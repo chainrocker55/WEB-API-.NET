@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using FLEX.API.Models;
 using FLEX.API.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -114,7 +115,23 @@ namespace FLEX.API.Controllers
             return Ok(result);
         }
 
-        
+        [HttpPost]
+        public ActionResult<List<string>> GetSysConfigList(JObject data)
+        {
+            var SYS_GROUP_ID = data.GetValue("SYS_GROUP_ID").ToObject<string>();
+            var SYS_KEY = data.GetValue("SYS_KEY").ToObject<string>();
+
+            var cfg = svc.GetSysConfig(SYS_GROUP_ID, SYS_KEY);
+
+            var str = cfg?.CHAR_DATA;
+            if (String.IsNullOrWhiteSpace(str)) return null;
+
+            var cls = str.Split(',').Select(i => i.Trim()).ToList();
+
+            return Ok(cls);
+        }
+
+
 
     }
 }

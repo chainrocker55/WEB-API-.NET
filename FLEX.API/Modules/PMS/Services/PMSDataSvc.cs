@@ -21,7 +21,7 @@ namespace FLEX.API.Modules.Services.PMS
         List<PMS061_GetCheckJobPersonInCharge_Result> sp_PMS061_GetCheckJobPersonInCharge(string CHECK_REPH_ID, string MACHINE_NO);
         string PMS061_SaveData(PMS061_DTO data, string user);
         string PMS062_SaveData(PMS061_DTO data);
-        string GetMachineDefaultComponent(string MACHINE_NO);
+        string sp_PMS062_GetMachineDefaultComponent(string MACHINE_NO);
         List<PMS062_GetJobPmChecklist_Result> sp_PMS062_GetJobPmChecklist(string CHECK_REPH_ID, string MACHINE_NO);
         List<PMS062_GetJobPmPart_Result> sp_PMS062_GetJobPmPart(string CHECK_REPH_ID, string MCBOM_CD, string PARTS_LOC_CD);
         List<PMS062_GetInQty_Result> sp_PMS062_GetInQty(string CHECK_REPH_ID, string xml);
@@ -122,7 +122,7 @@ namespace FLEX.API.Modules.Services.PMS
         }
 
 
-        public string GetMachineDefaultComponent(string MACHINE_NO)
+        public string sp_PMS062_GetMachineDefaultComponent(string MACHINE_NO)
         {
             try
             {
@@ -230,12 +230,23 @@ namespace FLEX.API.Modules.Services.PMS
         {
             // validate data
             Validate_PMS062(data);
+            PMS062_SetPartSeq(data.PmParts);
+
 
             // get transaction           
             var partTransaction = GetPartTransaction(data.PmParts, data.Header.CHECK_REPH_ID, data.Header.TEST_DATE, null);
 
             return PMS062_SaveAll(data.Header, data.PersonInCharge, data.PmChecklist, data.PmParts, partTransaction, null, null, data.CurrentUser, false);
 
+        }
+
+        private void PMS062_SetPartSeq(List<PMS062_GetJobPmPart_Result> partData)
+        {
+            int seq = 1;
+            foreach (var item in partData)
+            {
+                item.SEQ = seq++;
+            }
         }
 
         public string PMS062_SaveAll(PMS061_GetCheckJobH_Result h, List<PMS061_GetCheckJobPersonInCharge_Result> personInCharge, List<PMS062_GetJobPmChecklist_Result> checklist, List<PMS062_GetJobPmPart_Result> partsData, List<PMS062_Transaction> partTransaction, List<string> approver, ApproveHistory approveHistory, string userCd, bool sendNotification)
@@ -1332,20 +1343,5 @@ namespace FLEX.API.Modules.Services.PMS
 
             //SendJobNotification(data.Header.CHECK_REPH_ID, "PMS062");
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     }
 }
