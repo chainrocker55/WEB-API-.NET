@@ -15,6 +15,7 @@ namespace FLEX.API.Modules.Services.PMS
 {
     public interface IPMSDataSvc
     {
+        PMS060_UserDefaultValue PMS060_GetUserDefaultValue(string USER_CD);
         List<PMS060_CheckListAndRepairOrder_Result> sp_PMS060_GetMachineRepairOrderList(PMS060_Search_Criteria criteria);
         List<PMS061_GetCheckJobH_Result> sp_PMS061_GetCheckJobH(string CHECK_REPH_ID);
         List<PMS061_GetCheckJobH_OH_Result> sp_PMS061_GetCheckJobH_OH(string CHECK_REPH_ID);
@@ -131,6 +132,11 @@ namespace FLEX.API.Modules.Services.PMS
 
         }
 
+        public PMS060_UserDefaultValue PMS060_GetUserDefaultValue(string USER_CD)
+        {
+            var data = ct.sp_PMS060_GetCheckDefaultValueByUser.FromSqlRaw("sp_PMS060_GetCheckDefaultValueByUser {0}", USER_CD).FirstOrDefault();
+            return data;
+        }
         public string PMS061_SaveData(PMS061_DTO data, string user)
         {
             ValidateJobUpdateDate(data.Header.CHECK_REPH_ID, data.Header.LASTUPDATEDATETIME);
