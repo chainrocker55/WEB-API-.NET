@@ -4,6 +4,7 @@ using FLEX.API.Modules.Flex.Models.Combo;
 using FLEX.API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json.Linq;
 
 namespace FLEX.API.Modules.Flex.Controllers
 {
@@ -129,9 +130,14 @@ namespace FLEX.API.Modules.Flex.Controllers
             return Ok(result);
         }
         [HttpGet]
-        public ActionResult<List<ComboStringValue>> GetComboItemUnit(string ITEM_CD)
+        [HttpPost]
+        public ActionResult<List<ComboStringValue>> GetComboItemUnit(JObject param)
         {
-            var result = svc.GetComboItemUnit(ITEM_CD);
+            var ITEM_CD = param.GetValue("ITEM_CD")?.ToObject<string>();
+            var UNIT_SETTING  = param.GetValue("UNIT_SETTING")?.ToObject<string>();
+            var SHOW_CODE = param.GetValue("SHOW_CODE")?.ToObject<bool?>();
+
+            var result = svc.GetComboItemUnit(ITEM_CD, UNIT_SETTING, SHOW_CODE??false);
             return Ok(result);
         }
 

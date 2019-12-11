@@ -47,6 +47,8 @@ namespace FLEX.API.Modules.Services.PMS
         PMS031_LoadMachineData_Result sp_PMS031_LoadMachineData(string MACHINE_NO);
         List<PMS061_GetCheckJobPersonInCharge_Result> sp_PMS031_LoadMachineData(string CHECK_REPH_ID, string MACHINE_NO);
         void PMS061_Cancel(PMS061_DTO data);
+        List<sp_PMS062_LoadApproveHistory_Result> sp_PMS062_LoadApproveHistory(string stringValue);
+        List<String_Result> PMS062_GetApprover(string cHECK_REPH_ID);
     }
 
     public class PMSDataSvc : IPMSDataSvc
@@ -440,7 +442,7 @@ namespace FLEX.API.Modules.Services.PMS
 
         public bool Validate_PMS062(PMS061_DTO data)
         {
-            var partData = data.PmParts.Where(p => p.USED_QTY > 0).ToList();
+            var partData = data.PmParts.Where(p => p.REQUEST_QTY > 0).ToList();
             var parts = partData.Select(p => new PMS062_GetJobPmPart_Result()
             {
                 PARTS_ITEM_CD = p.PARTS_ITEM_CD,
@@ -459,6 +461,8 @@ namespace FLEX.API.Modules.Services.PMS
                     ValidateOnHand(data.Header.CHECK_REPH_ID, data.Header.TEST_DATE, parts);
                 }
             }
+
+            data.PmParts = partData;
 
             return true;
         }
@@ -542,7 +546,7 @@ namespace FLEX.API.Modules.Services.PMS
             Validate_PMS062(data);
 
             //validate approve route
-            var approveList = ct.PMS062_GetApproveRoute.FromSqlRaw("sp_PMS062_GetApproveRoute {0}", data.Header.MACHINE_NO).ToList();
+            var approveList = ct.PMS062_GetApproveRoute.FromSqlRaw("sp_PMS062_GetApproveRoute {0}, {1}", data.Header.MACHINE_NO, data.Header.MACHINE_LOC_CD).ToList();
             if (approveList.Count == 0)
             {
                 throw new ServiceException("VLM0439");
@@ -738,7 +742,7 @@ namespace FLEX.API.Modules.Services.PMS
         public string PMS063_SaveData(PMS063_DTO data)
         {
             // validate data
-            var partData = data.Parts.Where(p => p.OUT_USEDQTY > 0 || p.REQUEST_QTY > 0).ToList();
+            var partData = data.Parts.Where(p=> p.REQUEST_QTY > 0).ToList();
             var parts = partData.Select(p => new PMS062_GetJobPmPart_Result()
             {
                 PARTS_ITEM_CD = p.ITEM_CD,
@@ -1348,6 +1352,18 @@ namespace FLEX.API.Modules.Services.PMS
                 );
 
             //SendJobNotification(data.Header.CHECK_REPH_ID, "PMS062");
+        }
+
+        public List<sp_PMS062_LoadApproveHistory_Result> sp_PMS062_LoadApproveHistory(string CHECK_REPH_ID)
+        {
+            var result = ct.sp_PMS062_LoadApproveHistory.FromSqlRaw("sp_PMS062_LoadApproveHistory {0}", CHECK_REPH_ID).ToList();
+            return result;
+        }
+
+        public List<String_Result> PMS062_GetApprover(string cHECK_REPH_ID)
+        {
+            var result = ct.PMS062_GetApprover.FromSqlRaw("PMS062_GetApprover {0}", cHECK_REPH_ID).ToList();
+            return result;
         }
     }
 }

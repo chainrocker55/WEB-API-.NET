@@ -28,7 +28,7 @@ namespace FLEX.API.Services
         List<ComboIntValue> GetComboPoNumber();
         List<ComboIntValue> GetComboMachinePeriod();
         List<ComboStringValue> GetComboMachineComponent(string MACHINE_NO);
-        List<ComboStringValue> GetComboItemUnit(string ITEM_CD);
+        List<ComboStringValue> GetComboItemUnit(string ITEM_CD, string UNIT_SETTING, bool SHOW_CODE);
         List<ComboStringValue> GetComboUnit(bool? SHOW_CODE);
     }
     public class ComboDataSvc : IComboDataSvc
@@ -118,9 +118,9 @@ namespace FLEX.API.Services
 
         }
 
-        public List<ComboStringValue> GetComboItemUnit(string ITEM_CD)
+        public List<ComboStringValue> GetComboItemUnit(string ITEM_CD, string UNIT_SETTING, bool SHOW_CODE)
         {
-            return this.ct.sp_Combo_GetItemUnit_KIBUN.FromSqlRaw("sp_Combo_GetItemUnit_KIBUN {0}, {1}, {2}", ITEM_CD, null, true).ToList();
+            return this.ct.sp_Combo_GetItemUnit_KIBUN.FromSqlRaw("sp_Combo_GetItemUnit_KIBUN {0}, {1}, {2}", ITEM_CD, UNIT_SETTING, SHOW_CODE).ToList();
 
         }
 

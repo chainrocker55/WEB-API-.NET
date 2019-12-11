@@ -454,6 +454,40 @@ namespace FLEX.API.Modules.PMS.Controllers
             }
         }
 
+        [HttpPost]
+        public ActionResult<string> LoadApproveHistory(SingleParam param)
+        {
+            try
+            {
+                var result = svc.sp_PMS062_LoadApproveHistory(param.StringValue);
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.GetBaseException());
+            }
+        }
+
+        [HttpPost]
+        public ActionResult<bool> IsApprover(JObject param)
+        {
+            try
+            {
+                var CHECK_REPH_ID = param.GetValue("CHECK_REPH_ID").ToObject<string>();
+                var USER_CD = param.GetValue("USER_CD").ToObject<string>();
+
+                var approver = svc.PMS062_GetApprover(CHECK_REPH_ID);
+                var isApprover = approver.Any(a => a.VALUE == USER_CD);
+
+                return Ok(isApprover);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.GetBaseException());
+            }
+        }
+
        
 
 

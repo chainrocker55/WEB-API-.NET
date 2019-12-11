@@ -50,6 +50,7 @@ namespace FLEX.API.Context
             modelBuilder.Entity<PMS063_GetPersonalChecklist_Result>().HasNoKey();
             modelBuilder.Entity<PMS031_LoadMachineData_Result>().HasNoKey();
             modelBuilder.Entity<PMS060_UserDefaultValue>().HasNoKey();
+            modelBuilder.Entity<sp_PMS062_LoadApproveHistory_Result>().HasNoKey();
         }
 
         #region Flex
@@ -102,6 +103,7 @@ namespace FLEX.API.Context
         public DbSet<PMS061_GetCheckJobH_OH_Result> sp_PMS061_GetCheckJobH_OH { get; set; }
         public DbSet<PMS062_GetJobPmChecklist_Result> sp_PMS062_GetJobPmChecklist { get; set; }
         public DbSet<PMS061_GetCheckJobPersonInCharge_Result> sp_PMS061_GetCheckJobPersonInCharge { get; set; }
+        public DbSet<sp_PMS062_LoadApproveHistory_Result> sp_PMS062_LoadApproveHistory { get; set; }
         public DbSet<String_Result> PMS061_SaveData { get; set; }
         public DbSet<String_Result> sp_PMS062_GetMachineDefaultComponent { get; set; }
         public DbSet<PMS062_GetJobPmPart_Result> sp_PMS062_GetJobPmPart { get; set; }
@@ -118,6 +120,8 @@ namespace FLEX.API.Context
         public DbSet<PMS031_LoadMachineData_Result> sp_PMS031_LoadMachineData { get; set; }
 
         public DbSet<PMS060_UserDefaultValue> sp_PMS060_GetCheckDefaultValueByUser { get; set; }
+
+        public DbSet<String_Result> PMS062_GetApprover { get; set; }
         #endregion
 
     }
