@@ -83,9 +83,9 @@ namespace FLEX.API.Modules.Flex.Controllers
         }
 
         [HttpGet]
-        public ActionResult<List<ComboIntValue>> GetComboSupplier()
+        public ActionResult<List<ComboIntValue>> GetComboSupplier(bool IsIncludeDelete = false)
         {
-            var result = svc.GetComboSupplier();
+            var result = svc.GetComboSupplier(IsIncludeDelete);
             return Ok(result);
         }
 

@@ -21,7 +21,7 @@ namespace FLEX.API.Services
         List<ComboStringValue> GetComboUserWithPosition();
         List<ComboStringValue> GetComboLocation();
         List<ComboStringValue> GetComboUserApproveLocation(string userCd);
-        List<ComboIntValue> GetComboSupplier();
+        List<ComboIntValue> GetComboSupplier(bool IsIncludeDelete = false);
         List<ComboIntValue> GetComboMachineScheduleType();
         List<ComboStringValue> GetComboMachineStatus();
         List<ComboStringValue> GetComboMachine(bool? excludeDelete);
@@ -81,9 +81,9 @@ namespace FLEX.API.Services
         {
             return this.ct.sp_Combo_GetUserApproveLocation.FromSqlRaw("sp_Combo_GetUserApproveLocation {0}", userCd).ToList();
         }
-        public List<ComboIntValue> GetComboSupplier()
+        public List<ComboIntValue> GetComboSupplier(bool IsIncludeDelete = false)
         {
-            return this.ct.sp_Combo_GetSupplier.FromSqlRaw("sp_Combo_GetSupplier").ToList();
+            return this.ct.sp_Combo_GetSupplier.FromSqlRaw("sp_Combo_GetSupplier {0}", IsIncludeDelete).ToList();
         }
 
         public List<ComboIntValue> GetComboMachineScheduleType()
