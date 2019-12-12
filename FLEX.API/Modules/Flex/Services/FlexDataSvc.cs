@@ -2,12 +2,14 @@
 using FLEX.API.Context;
 using FLEX.API.Models;
 using FLEX.API.Modules.Flex.Models;
+using FLEX.API.Modules.PMS.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
+using System.IO;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
@@ -30,6 +32,7 @@ namespace FLEX.API.Services
         List<SpecialPermissionResult> GetSpecialPermission(string userGroup, string screenCd);
         List<TBM_STATUS> GetStatusList();
         TZ_SYS_CONFIG GetSysConfig(string SYS_GROUP_ID, string SYS_KEY);
+        FileTemplate LoadMachineAttachment(string mACHINE_NO, string fILE_ID);
     }
 
     public class FlexDataSvc : IFlexDataSvc
@@ -203,6 +206,21 @@ namespace FLEX.API.Services
         {
             var result = ct.TZ_SYS_CONFIG.ToList().Where(c=>c.SYS_GROUP_ID==SYS_GROUP_ID && c.SYS_KEY==SYS_KEY).FirstOrDefault();
             return result;
+        }
+        public FileTemplate LoadMachineAttachment(string mACHINE_NO, string fILE_ID)
+        {
+            var result = ct.sp_PMS031_LoadAttachment.FromSqlRaw("sp_PMS031_LoadAttachment {0}", mACHINE_NO).ToList();
+            var attachment = result.Where(a=>a.FILE_ID?.ToString() == fILE_ID).Select(f => new FileTemplate()
+            {
+                DisplayName = f.FILE_NAME_ORG,
+                FILEHID = f.MACHINE_NO,
+                FILEID = f.FILE_ID ?? 0,
+                PhysicalName = Path.Combine(f.FILE_PATH, f.FILE_NAME),
+                IsFromServer = true,
+                FilePath = f.FILE_PATH
+            }).FirstOrDefault();
+
+            return attachment;
         }
     }
 }

@@ -10,6 +10,7 @@ using FLEX.API.Modules.Services.PMS;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.StaticFiles;
 using Newtonsoft.Json.Linq;
 
 namespace FLEX.API.Modules.PMS.Controllers
@@ -488,7 +489,21 @@ namespace FLEX.API.Modules.PMS.Controllers
             }
         }
 
-       
+        [HttpPost]
+        public ActionResult<List<FileTemplate>> LoadMachineAttachment (SingleParam param)
+        {
+            try
+            {
+                var result = svc.sp_PMS031_LoadAttachment(param.StringValue);
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.GetBaseException());
+            }
+        }
+
 
 
 

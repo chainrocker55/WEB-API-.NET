@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Transactions;
@@ -49,6 +50,7 @@ namespace FLEX.API.Modules.Services.PMS
         void PMS061_Cancel(PMS061_DTO data);
         List<sp_PMS062_LoadApproveHistory_Result> sp_PMS062_LoadApproveHistory(string stringValue);
         List<String_Result> PMS062_GetApprover(string cHECK_REPH_ID);
+        List<FileTemplate> sp_PMS031_LoadAttachment(string stringValue);
     }
 
     public class PMSDataSvc : IPMSDataSvc
@@ -743,7 +745,7 @@ namespace FLEX.API.Modules.Services.PMS
         public string PMS063_SaveData(PMS063_DTO data)
         {
             // validate data
-            var partData = data.Parts.Where(p=> p.REQUEST_QTY > 0).ToList();
+            var partData = data.Parts.Where(p => p.REQUEST_QTY > 0).ToList();
             var parts = partData.Select(p => new PMS062_GetJobPmPart_Result()
             {
                 PARTS_ITEM_CD = p.ITEM_CD,
@@ -1103,7 +1105,7 @@ namespace FLEX.API.Modules.Services.PMS
 
                 #endregion
 
-                if(sendNotification)
+                if (sendNotification)
                 {
                     SendJobNotification(hid, "PMS063");
                 }
@@ -1175,8 +1177,8 @@ namespace FLEX.API.Modules.Services.PMS
 
         public string PMS063_SendToApprove(PMS063_DTO data)
         {
-            List<PMS062_GetApproveRoute_Result> approveList=null;
-            if ((data.Header.SKIP_APPROVAL??"N") == "N")
+            List<PMS062_GetApproveRoute_Result> approveList = null;
+            if ((data.Header.SKIP_APPROVAL ?? "N") == "N")
             {
                 //validate approve route
                 approveList = ct.PMS062_GetApproveRoute.FromSqlRaw("sp_PMS063_GetApproveRoute {0}", data.Header.MACHINE_NO).ToList();
@@ -1342,7 +1344,7 @@ namespace FLEX.API.Modules.Services.PMS
 
         public List<PMS061_GetCheckJobPersonInCharge_Result> sp_PMS031_LoadMachineData(string CHECK_REPH_ID, string MACHINE_NO)
         {
-            var result = ct.sp_PMS061_GetCheckJobPersonInCharge.FromSqlRaw("sp_PMS061_GetCheckJobPersonInCharge {0} {1}", CHECK_REPH_ID,  MACHINE_NO).ToList();
+            var result = ct.sp_PMS061_GetCheckJobPersonInCharge.FromSqlRaw("sp_PMS061_GetCheckJobPersonInCharge {0} {1}", CHECK_REPH_ID, MACHINE_NO).ToList();
             return result;
         }
 
@@ -1366,8 +1368,24 @@ namespace FLEX.API.Modules.Services.PMS
 
         public List<String_Result> PMS062_GetApprover(string cHECK_REPH_ID)
         {
-            var result = ct.PMS062_GetApprover.FromSqlRaw("sp_PMS062_GetApprover {0}", cHECK_REPH_ID).ToList();
+            var result = ct.sp_PMS062_GetApprover.FromSqlRaw("sp_PMS062_GetApprover {0}", cHECK_REPH_ID).ToList();
             return result;
+        }
+
+        public List<FileTemplate> sp_PMS031_LoadAttachment(string MACHINE_NO)
+        {
+            var result = ct.sp_PMS031_LoadAttachment.FromSqlRaw("sp_PMS031_LoadAttachment {0}", MACHINE_NO).ToList();
+            var attachment = result.Select(f => new FileTemplate()
+            {
+                DisplayName = f.FILE_NAME_ORG,
+                FILEHID = f.MACHINE_NO,
+                FILEID = f.FILE_ID ?? 0,
+                PhysicalName = Path.Combine(f.FILE_PATH, f.FILE_NAME),
+                IsFromServer = true,
+                FilePath = f.FILE_PATH
+            }).ToList();
+
+            return attachment;
         }
     }
 }

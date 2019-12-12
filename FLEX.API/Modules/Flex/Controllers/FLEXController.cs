@@ -5,6 +5,7 @@ using FLEX.API.Models;
 using FLEX.API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.StaticFiles;
 using Newtonsoft.Json.Linq;
 
 namespace FLEX.API.Controllers
@@ -130,6 +131,10 @@ namespace FLEX.API.Controllers
 
             return Ok(cls);
         }
+
+
+
+        
 
 
 

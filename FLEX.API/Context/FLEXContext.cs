@@ -12,6 +12,8 @@ namespace FLEX.API.Context
 {
     public class FLEXContext : DbContext
     {
+        
+
         public FLEXContext(DbContextOptions options) : base(options)
         {
 
@@ -51,6 +53,7 @@ namespace FLEX.API.Context
             modelBuilder.Entity<PMS031_LoadMachineData_Result>().HasNoKey();
             modelBuilder.Entity<PMS060_UserDefaultValue>().HasNoKey();
             modelBuilder.Entity<sp_PMS062_LoadApproveHistory_Result>().HasNoKey();
+            modelBuilder.Entity<sp_PMS031_LoadAttachment_Result>().HasNoKey();
         }
 
         #region Flex
@@ -121,7 +124,9 @@ namespace FLEX.API.Context
 
         public DbSet<PMS060_UserDefaultValue> sp_PMS060_GetCheckDefaultValueByUser { get; set; }
 
-        public DbSet<String_Result> PMS062_GetApprover { get; set; }
+        public DbSet<String_Result> sp_PMS062_GetApprover { get; set; }
+
+        public DbSet<sp_PMS031_LoadAttachment_Result> sp_PMS031_LoadAttachment { get; set; }
         #endregion
 
     }
