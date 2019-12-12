@@ -554,7 +554,7 @@ namespace FLEX.API.Modules.Services.PMS
 
             var approveHistory = GetApproveHistory(data.Header, data.CurrentUser);
             SetApproverData(data.Header, approveList);
-            approveHistory.APPROVE_STATUS = data.Header.STATUSID;
+            approveHistory.APPROVE_STATUS = "APPROVE"; //data.Header.STATUSID;
             if (data.Header.STATUSID == STATUS_COMPLETE)
             {
                 var partTransaction = GetPartTransaction(data.PmParts, data.Header.CHECK_REPH_ID, data.Header.TEST_DATE, null);
@@ -680,7 +680,8 @@ namespace FLEX.API.Modules.Services.PMS
             data.Header.STATUSID = STATUS_REVISE;
             //data.Header.REVISE_REMARK = dlg.Remark;
 
-            approveHistory.APPROVE_STATUS = data.Header.STATUSID;
+            //approveHistory.APPROVE_STATUS = data.Header.STATUSID;
+            approveHistory.APPROVE_STATUS = "REVISE";
             approveHistory.REMARK = data.Header.REVISE_REMARK;
 
             data.Header.CHECK_REPH_ID = PMS062_SaveAll(
@@ -1187,7 +1188,8 @@ namespace FLEX.API.Modules.Services.PMS
 
             var approveHistory = GetApproveHistory(data.Header, data.CurrentUser);
             SetApproverData(data.Header, approveList);
-            approveHistory.APPROVE_STATUS = data.Header.STATUSID;
+            //approveHistory.APPROVE_STATUS = data.Header.STATUSID;
+            approveHistory.APPROVE_STATUS = "APPROVE";
 
             var partsData = data.Parts.Where(p => p.OUT_USEDQTY > 0 || p.REQUEST_QTY > 0).ToList();
             var parts = partsData.Select(p => new PMS062_GetJobPmPart_Result()
@@ -1232,7 +1234,8 @@ namespace FLEX.API.Modules.Services.PMS
 
             var approveHistory = GetApproveHistory(data.Header, data.CurrentUser);
             SetApproverData(data.Header, approveList);
-            approveHistory.APPROVE_STATUS = data.Header.STATUSID;
+            //approveHistory.APPROVE_STATUS = data.Header.STATUSID;
+            approveHistory.APPROVE_STATUS = "APPROVE";
 
             if (data.Header.STATUSID == STATUS_COMPLETE)
             {
@@ -1293,7 +1296,8 @@ namespace FLEX.API.Modules.Services.PMS
             data.Header.STATUSID = STATUS_REVISE;
             //data.Header.REVISE_REMARK = dlg.Remark;
 
-            approveHistory.APPROVE_STATUS = data.Header.STATUSID;
+            //approveHistory.APPROVE_STATUS = data.Header.STATUSID;
+            approveHistory.APPROVE_STATUS = "REVISE";
             approveHistory.REMARK = data.Header.REVISE_REMARK;
 
             data.Header.CHECK_REPH_ID = PMS063_SaveAll(
@@ -1362,7 +1366,7 @@ namespace FLEX.API.Modules.Services.PMS
 
         public List<String_Result> PMS062_GetApprover(string cHECK_REPH_ID)
         {
-            var result = ct.PMS062_GetApprover.FromSqlRaw("PMS062_GetApprover {0}", cHECK_REPH_ID).ToList();
+            var result = ct.PMS062_GetApprover.FromSqlRaw("sp_PMS062_GetApprover {0}", cHECK_REPH_ID).ToList();
             return result;
         }
     }
