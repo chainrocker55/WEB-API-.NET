@@ -1,4 +1,5 @@
 ﻿using FLEX.API.Common;
+using FLEX.API.Common.Extensions;
 using FLEX.API.Common.Utils;
 using FLEX.API.Context;
 using FLEX.API.Models;
@@ -78,23 +79,23 @@ namespace FLEX.API.Modules.Services.PMS
         public List<PMS060_CheckListAndRepairOrder_Result> sp_PMS060_GetMachineRepairOrderList(PMS060_Search_Criteria criteria)
         {
             return ct.sp_PMS060_GetMachineRepairOrderList.FromSqlRaw("sp_PMS060_GetMachineRepairOrderList {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, {17}, {18}, {19}",
-                criteria.REQUEST_DATE_FROM,
-                criteria.REQUEST_DATE_TO,
-                criteria.TEST_DATE_FROM,
-                criteria.TEST_DATE_TO,
-                criteria.COMPLETE_DATE_FROM,
-                criteria.COMPLETE_DATE_TO,
-                criteria.CHECK_REP_NO_FROM,
-                criteria.CHECK_REP_NO_TO,
-                criteria.PONUMBER_FROM,
-                criteria.PONUMBER_TO,
+                criteria.REQUEST_DATE_FROM?.ToLocalTime(),
+                criteria.REQUEST_DATE_TO?.ToLocalTime(),
+                criteria.TEST_DATE_FROM?.ToLocalTime(),
+                criteria.TEST_DATE_TO?.ToLocalTime(),
+                criteria.COMPLETE_DATE_FROM?.ToLocalTime(),
+                criteria.COMPLETE_DATE_TO?.ToLocalTime(),
+                criteria.CHECK_REP_NO_FROM.NullIfEmpty(),
+                criteria.CHECK_REP_NO_TO.NullIfEmpty(),
+                criteria.PONUMBER_FROM.NullIfEmpty(),
+                criteria.PONUMBER_TO.NullIfEmpty(),
                 criteria.PERSONINCHARGE,
-                criteria.REQUESTER,
-                criteria.MACHINE_LOC_CD,
-                criteria.CUR_PERSON,
-                criteria.MACHINE_NO_FROM,
-                criteria.MACHINE_NO_TO,
-                criteria.MACHINE_NAME,
+                criteria.REQUESTER.NullIfEmpty(),
+                criteria.MACHINE_LOC_CD.NullIfEmpty(),
+                criteria.CUR_PERSON.NullIfEmpty(),
+                criteria.MACHINE_NO_FROM.NullIfEmpty(),
+                criteria.MACHINE_NO_TO.NullIfEmpty(),
+                criteria.MACHINE_NAME.NullIfEmpty(),
                 criteria.VENDORID,
                 criteria.SCHEDULE_TYPEID,
                 criteria.STATUSID).ToList();
@@ -156,11 +157,11 @@ namespace FLEX.API.Modules.Services.PMS
                     data.Header.MACHINE_SCHEDULEID,
                     data.Header.MACHINE_NO,
                     data.Header.MACHINE_NAME,
-                    data.Header.PLAN_DATE,
-                    data.Header.REQUEST_DATE,
-                    data.Header.COMPLETE_DATE,
+                    data.Header.PLAN_DATE?.ToLocalTime(),
+                    data.Header.REQUEST_DATE?.ToLocalTime(),
+                    data.Header.COMPLETE_DATE?.ToLocalTime(),
                     data.Header.COMPLETE_TIME,
-                    data.Header.TEST_DATE,
+                    data.Header.TEST_DATE?.ToLocalTime(),
                     data.Header.MACHINE_LOC_CD,
                     data.Header.MACHINE_LOC,
                     data.Header.APPROVE_ID,
@@ -244,7 +245,7 @@ namespace FLEX.API.Modules.Services.PMS
 
 
             // get transaction           
-            var partTransaction = GetPartTransaction(data.PmParts, data.Header.CHECK_REPH_ID, data.Header.TEST_DATE, null);
+            var partTransaction = GetPartTransaction(data.PmParts, data.Header.CHECK_REPH_ID, data.Header.TEST_DATE?.ToLocalTime(), null);
 
             return PMS062_SaveAll(data.Header, data.PersonInCharge, data.PmChecklist, data.PmParts, partTransaction, null, null, data.CurrentUser, false);
 
@@ -270,11 +271,11 @@ namespace FLEX.API.Modules.Services.PMS
                     h.MACHINE_SCHEDULEID,
                     h.MACHINE_NO,
                     h.MACHINE_NAME,
-                    h.PLAN_DATE,
-                    h.REQUEST_DATE,
-                    h.COMPLETE_DATE,
+                    h.PLAN_DATE?.ToLocalTime(),
+                    h.REQUEST_DATE?.ToLocalTime(),
+                    h.COMPLETE_DATE?.ToLocalTime(),
                     h.COMPLETE_TIME,
-                    h.TEST_DATE,
+                    h.TEST_DATE?.ToLocalTime(),
                     h.MACHINE_LOC_CD,
                     h.MACHINE_LOC,
                     h.APPROVE_ID,
@@ -340,7 +341,7 @@ namespace FLEX.API.Modules.Services.PMS
                     var xmlPart = XmlUtil.ConvertToXml_Store(partsData);
                     ct.Database.ExecuteSqlRaw("sp_PMS062_InsertOrUpdatePmPart {0}, {1}, {2}, {3}, {4}, {5}",
                         hid,
-                        h.TEST_DATE,
+                        h.TEST_DATE?.ToLocalTime(),
                         h.MACHINE_NO,
                         xmlPart,
                         userCd,
@@ -353,7 +354,7 @@ namespace FLEX.API.Modules.Services.PMS
                         ct.Database.ExecuteSqlRaw("sp_PMS062_SaveCheckJobTransaction {0}, {1}, {2}, {3}, {4}, {5}, {6}",
                             hid,
                             h.CHECK_REP_NO,
-                            h.TEST_DATE,
+                            h.TEST_DATE?.ToLocalTime(),
                             h.MACHINE_NO,
                             xmlTrans,
                             userCd,
@@ -458,9 +459,9 @@ namespace FLEX.API.Modules.Services.PMS
             {
                 ValidateOnHand(data.Header.CHECK_REPH_ID, DateTime.Today, parts);
 
-                if (DateTime.Today != data.Header.TEST_DATE)
+                if (DateTime.Today != data.Header.TEST_DATE?.ToLocalTime())
                 {
-                    ValidateOnHand(data.Header.CHECK_REPH_ID, data.Header.TEST_DATE, parts);
+                    ValidateOnHand(data.Header.CHECK_REPH_ID, data.Header.TEST_DATE?.ToLocalTime(), parts);
                 }
             }
 
@@ -559,7 +560,7 @@ namespace FLEX.API.Modules.Services.PMS
             approveHistory.APPROVE_STATUS = "APPROVE"; //data.Header.STATUSID;
             if (data.Header.STATUSID == STATUS_COMPLETE)
             {
-                var partTransaction = GetPartTransaction(data.PmParts, data.Header.CHECK_REPH_ID, data.Header.TEST_DATE, null);
+                var partTransaction = GetPartTransaction(data.PmParts, data.Header.CHECK_REPH_ID, data.Header.TEST_DATE?.ToLocalTime(), null);
                 data.Header.CHECK_REPH_ID = PMS062_SaveAll(
                     data.Header,
                     null,
@@ -754,10 +755,10 @@ namespace FLEX.API.Modules.Services.PMS
                 UNITCODE = p.UNITCODE,
                 USED_QTY = p.OUT_USEDQTY
             }).ToList();
-            Validate_PMS063(data.Header.CHECK_REPH_ID, data.Header.COMPLETE_DATE, parts);
+            Validate_PMS063(data.Header.CHECK_REPH_ID, data.Header.COMPLETE_DATE?.ToLocalTime(), parts);
 
             // get transaction           
-            var partTransaction = GetPartTransaction(parts, data.Header.CHECK_REPH_ID, data.Header.TEST_DATE, null);
+            var partTransaction = GetPartTransaction(parts, data.Header.CHECK_REPH_ID, data.Header.TEST_DATE?.ToLocalTime(), null);
             return PMS063_SaveAll(
                 data.Header,
                 data.PersonInCharge,
@@ -834,11 +835,11 @@ namespace FLEX.API.Modules.Services.PMS
                     h.MACHINE_SCHEDULEID,
                     h.MACHINE_NO,
                     h.MACHINE_NAME,
-                    h.PLAN_DATE,
-                    h.REQUEST_DATE,
-                    h.COMPLETE_DATE,
+                    h.PLAN_DATE?.ToLocalTime(),
+                    h.REQUEST_DATE?.ToLocalTime(),
+                    h.COMPLETE_DATE?.ToLocalTime(),
                     h.COMPLETE_TIME,
-                    h.TEST_DATE,
+                    h.TEST_DATE?.ToLocalTime(),
                     h.MACHINE_LOC_CD,
                     h.MACHINE_LOC,
                     h.APPROVE_ID,
@@ -888,7 +889,7 @@ namespace FLEX.API.Modules.Services.PMS
                 #region TB_CHECK_JOBH_CR_RQ
                 ct.Database.ExecuteSqlRaw("sp_PMS063_InsertOrUpdateCheckJob_CR_RQ {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}",
                     hid,
-                    h.START_REQ_DATE,
+                    h.START_REQ_DATE?.ToLocalTime(),
                     h.START_REQ_TIME,
                     h.TROUBLE,
                     h.REQUESTER,
@@ -901,7 +902,7 @@ namespace FLEX.API.Modules.Services.PMS
                 #region TB_CHECK_JOBH_CR_MTN
                 ct.Database.ExecuteSqlRaw("sp_PMS063_InsertOrUpdateCheckJob_CR_MTN {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, {17}, {18}, {19}, {20}",
                     hid,
-                    h.REC_REQUEST_DATE,
+                    h.REC_REQUEST_DATE?.ToLocalTime(),
                     h.REC_REQUEST_TIME,
                     h.SKIP_APPROVAL,
                     h.ASSIGNER,
@@ -914,11 +915,11 @@ namespace FLEX.API.Modules.Services.PMS
                     h.CLEAN_FLAG,
                     h.CLEAN_PERSON,
                     h.CLEAN_POSITIONID,
-                    h.CLEAN_DATE,
+                    h.CLEAN_DATE?.ToLocalTime(),
                     h.CHECK_MC_FLAG,
                     h.CHECK_MC_PERSON,
                     h.CHECK_MC_POSITIONID,
-                    h.CHECK_MC_DATE,
+                    h.CHECK_MC_DATE?.ToLocalTime(),
 
                     userCd,
                         Constant.DEFAULT_MACHINE
@@ -996,7 +997,7 @@ namespace FLEX.API.Modules.Services.PMS
                     ct.Database.ExecuteSqlRaw("sp_PMS062_SaveCheckJobTransaction  {0}, {1}, {2}, {3}, {4}, {5}, {6}",
                         hid,
                         h.CHECK_REP_NO,
-                        h.TEST_DATE,
+                        h.TEST_DATE?.ToLocalTime(),
                         h.MACHINE_NO,
                         xmlTrans,
                         userCd,
@@ -1026,20 +1027,20 @@ namespace FLEX.API.Modules.Services.PMS
                     ct.Database.ExecuteSqlRaw("sp_PMS063_InsertOrUpdateCrCheck {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, {17}",
                         hid,
                         crCheck.CHECK_MC_ID,
-                        crCheck.CHECK_MC_DATE_FR,
-                        crCheck.CHECK_MC_DATE_TO,
+                        crCheck.CHECK_MC_DATE_FR?.ToLocalTime(),
+                        crCheck.CHECK_MC_DATE_TO?.ToLocalTime(),
                         crCheck.CHECK_MC_PERSON,
                         crCheck.CHECK_MC_POSITIONID,
-                        crCheck.CHECK_MC_DATE,
+                        crCheck.CHECK_MC_DATE?.ToLocalTime(),
                         crCheck.CLEAN_FLAG,
                         crCheck.CLEAN_PERSON,
                         crCheck.CLEAN_POSITIONID,
-                        crCheck.CLEAN_DATE,
+                        crCheck.CLEAN_DATE?.ToLocalTime(),
                         crCheck.QC_CHECK,
                         crCheck.QC_CHECK_DESC,
                         crCheck.QC_PERSON,
                         crCheck.QC_POSITIONID,
-                        crCheck.QC_DATE,
+                        crCheck.QC_DATE?.ToLocalTime(),
 
                         userCd,
                         Constant.DEFAULT_MACHINE
@@ -1059,7 +1060,7 @@ namespace FLEX.API.Modules.Services.PMS
                     // generate job
                     var machineData = ct.sp_PMS031_LoadMachineData.FromSqlRaw("sp_PMS031_LoadMachineData {0}", h.MACHINE_NO).ToList().FirstOrDefault();
 
-                    if (machineData?.CR_PERIOD1 != null && machineData?.CR_PERIOD1_ID != null && h.COMPLETE_DATE != null)
+                    if (machineData?.CR_PERIOD1 != null && machineData?.CR_PERIOD1_ID != null && h.COMPLETE_DATE?.ToLocalTime() != null)
                     {
 
                         var sch1 = ScheduleUtil.GetNextDate(new Schedule()
@@ -1069,7 +1070,7 @@ namespace FLEX.API.Modules.Services.PMS
                             //DAYS = null,
                             //END_DATE = null,
                             //START_DATE = h.COMPLETE_DATE
-                        }, h.COMPLETE_DATE);
+                        }, h.COMPLETE_DATE?.ToLocalTime());
                         var sch1_hid = GenerateAutoJob(ct, h, sch1, userCd);
 
                         DateTime? sch2 = null;
@@ -1181,7 +1182,7 @@ namespace FLEX.API.Modules.Services.PMS
             if ((data.Header.SKIP_APPROVAL ?? "N") == "N")
             {
                 //validate approve route
-                approveList = ct.PMS062_GetApproveRoute.FromSqlRaw("sp_PMS063_GetApproveRoute {0}", data.Header.MACHINE_NO).ToList();
+                approveList = ct.PMS062_GetApproveRoute.FromSqlRaw("sp_PMS063_GetApproveRoute {0}, {1}", data.Header.MACHINE_NO, data.Header.MACHINE_LOC_CD).ToList();
                 if (approveList.Count == 0)
                 {
                     throw new ServiceException("VLM0439");
@@ -1202,12 +1203,12 @@ namespace FLEX.API.Modules.Services.PMS
                 USED_QTY = p.OUT_USEDQTY
             }).ToList();
 
-            Validate_PMS063(data.Header.CHECK_REPH_ID, data.Header.COMPLETE_DATE, parts);
+            Validate_PMS063(data.Header.CHECK_REPH_ID, data.Header.COMPLETE_DATE?.ToLocalTime(), parts);
 
             var toolsData = data.Tools.Where(p => p.OUT_USEDQTY > 0 || p.REQUEST_QTY > 0).ToList();
 
 
-            var partTransaction = GetPartTransaction(parts, data.Header.CHECK_REPH_ID, data.Header.TEST_DATE, null);
+            var partTransaction = GetPartTransaction(parts, data.Header.CHECK_REPH_ID, data.Header.TEST_DATE?.ToLocalTime(), null);
             data.Header.CHECK_REPH_ID = PMS063_SaveAll(
                 data.Header,
                 data.PersonInCharge,
@@ -1228,7 +1229,7 @@ namespace FLEX.API.Modules.Services.PMS
         public string PMS063_Approve(PMS063_DTO data)
         {
             //validate approve route
-            var approveList = ct.PMS062_GetApproveRoute.FromSqlRaw("sp_PMS063_GetApproveRoute {0}", data.Header.MACHINE_NO).ToList();
+            var approveList = ct.PMS062_GetApproveRoute.FromSqlRaw("sp_PMS063_GetApproveRoute {0}, {1}", data.Header.MACHINE_NO, data.Header.MACHINE_LOC_CD).ToList();
             if (approveList.Count == 0)
             {
                 throw new ServiceException("VLM0439");
@@ -1249,9 +1250,9 @@ namespace FLEX.API.Modules.Services.PMS
                     UNITCODE = p.UNITCODE,
                     USED_QTY = p.OUT_USEDQTY
                 }).ToList();
-                Validate_PMS063(data.Header.CHECK_REPH_ID, data.Header.COMPLETE_DATE, parts);
+                Validate_PMS063(data.Header.CHECK_REPH_ID, data.Header.COMPLETE_DATE?.ToLocalTime(), parts);
                 var toolsData = data.Tools.Where(p => p.OUT_USEDQTY > 0 || p.REQUEST_QTY > 0).ToList();
-                var partTransaction = GetPartTransaction(parts, data.Header.CHECK_REPH_ID, data.Header.TEST_DATE, null);
+                var partTransaction = GetPartTransaction(parts, data.Header.CHECK_REPH_ID, data.Header.TEST_DATE?.ToLocalTime(), null);
 
                 data.Header.CHECK_REPH_ID = PMS063_SaveAll(
                     data.Header,
