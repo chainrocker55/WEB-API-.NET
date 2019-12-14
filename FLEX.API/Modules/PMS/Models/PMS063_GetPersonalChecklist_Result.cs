@@ -38,12 +38,7 @@ namespace FLEX.API.Modules.PMS.Models
             set;
         }
 
-        public bool PASS { 
-            get
-            {
-                return PASS_CHECK == "Y";
-            }
-        }
-        //public bool NOT_PASS { get; set; }
+        public bool? PASS { get; set; }
+        public bool? NOT_PASS { get; set; }
     }
 }

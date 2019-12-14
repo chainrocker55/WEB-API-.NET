@@ -724,9 +724,18 @@ namespace FLEX.API.Modules.Services.PMS
 
         public List<PMS063_GetPersonalChecklist_Result> sp_PMS063_GetPersonalChecklist(string CHECK_REPH_ID)
         {
-            return ct.sp_PMS063_GetPersonalChecklist.FromSqlRaw("sp_PMS063_GetPersonalChecklist {0}",
+            var result = ct.sp_PMS063_GetPersonalChecklist.FromSqlRaw("sp_PMS063_GetPersonalChecklist {0}",
                 CHECK_REPH_ID
             ).ToList();
+
+            //foreach(var item in result)
+            //{
+            //    item.PASS = item.PASS_CHECK == null ? null : (bool?)(item.PASS_CHECK == "Y");
+            //    item.NOT_PASS = item.PASS_CHECK == null ? null : (bool?)(item.PASS_CHECK == "N");
+
+            //}
+
+            return result;
         }
 
         public List<PMS063_GetJobCrCheck_Result> sp_PMS063_GetJobCrCheck(string CHECK_REPH_ID)
@@ -1010,6 +1019,14 @@ namespace FLEX.API.Modules.Services.PMS
                 #region personal checklist
                 if (personalChecklist != null)
                 {
+                    foreach (var item in personalChecklist)
+                    {
+                        if (item.PASS != true && item.NOT_PASS != true)
+                        {
+                            item.PASS = null;
+                        }
+                    }
+
                     var xmlPH = XmlUtil.ConvertToXml_Store(personalChecklist);
                     ct.Database.ExecuteSqlRaw("sp_PMS063_InsertOrUpdateCrPersonal {0}, {1}, {2}, {3}",
                         hid,
