@@ -20,6 +20,17 @@ namespace FLEX.API.Modules.PMS.Controllers
     [ApiController]
     public class PMSController : ControllerBase
     {
+        const string STATUS_ACTIVE_PLAN = "F01"; // Active Plan
+        const string STATUS_CANCEL_PLAN = "F02"; // Cancelled Plan
+        const string STATUS_NEW = "F03"; // New Check/Repair Order
+        const string STATUS_DURING_ASSIGN = "F04"; // During Assign
+        const string STATUS_RECEIVED = "F05"; // Received Check/Repair Order
+        const string STATUS_DURING_APPROVE = "F06"; // During Approve
+        const string STATUS_REVISE = "F07"; // Revised
+        const string STATUS_PARTIAL = "F08"; // Partial Check/Repair Order
+        const string STATUS_COMPLETE = "F09"; // Completed Check/Repair Order
+        const string STATUS_CANCEL = "F10"; // Cancelled Check/Repair Order
+
         private readonly IPMSDataSvc svc;
         public PMSController(IPMSDataSvc service)
         {
@@ -64,7 +75,8 @@ namespace FLEX.API.Modules.PMS.Controllers
                 if (row.SCHEDULE_TYPEID == 1)
                 {
                     data.Header.COMPLETE_DATE = row.COMPLETE_DATE;
-                }else if (row.SCHEDULE_TYPEID == 2)
+                }
+                else if (row.SCHEDULE_TYPEID == 2)
                 {
                     data.Header.TEST_DATE = row.TEST_DATE;
                     data.Header.PERIOD = row.PERIOD;
@@ -72,7 +84,7 @@ namespace FLEX.API.Modules.PMS.Controllers
                     data.Header.MACHINE_LOC = row.MACHINE_LOC;
                     data.Header.MACHINE_LOC_CD = row.MACHINE_LOC_CD;
 
-                    
+
                 }
             }
 
@@ -136,7 +148,7 @@ namespace FLEX.API.Modules.PMS.Controllers
 
             data.DefaultComponent = svc.sp_PMS062_GetMachineDefaultComponent(data.Header.MACHINE_NO);
 
-            data.Check=svc.sp_PMS063_GetJobCrCheck(row.CHECK_REPH_ID).SingleOrDefault();
+            data.Check = svc.sp_PMS063_GetJobCrCheck(row.CHECK_REPH_ID).SingleOrDefault();
             if (data.Check == null)
                 data.Check = new PMS063_GetJobCrCheck_Result();
 
@@ -146,13 +158,43 @@ namespace FLEX.API.Modules.PMS.Controllers
 
             data.Tools = svc.sp_PMS063_GetJobCrPart(row.CHECK_REPH_ID, 1).ToList();
             if (data.Tools == null)
+            {
                 data.Tools = new List<PMS063_GetJobCrPart_Result>();
+            }
+            else
+            {
+                if (data.Header.STATUSID == STATUS_DURING_APPROVE)
+                {
+                    foreach (var item in data.Tools)
+                    {
+                        item.OUT_CLEAN = item.OUT_CLEAN ?? item.IN_CLEAN;
+                        item.OUT_CLEAN_BOOL = item.OUT_CLEAN_BOOL ?? item.IN_CLEAN_BOOL;
+                        item.OUT_APPEARANCE = item.OUT_APPEARANCE ?? item.IN_APPEARANCE;
+                        item.OUT_APPEARANCE_BOOL = item.OUT_APPEARANCE_BOOL ?? item.IN_APPEARANCE_BOOL;
+                    }
+                }
+            }
 
             data.Parts = svc.sp_PMS063_GetJobCrPart(row.CHECK_REPH_ID, 2).ToList();
             if (data.Parts == null)
+            {
                 data.Parts = new List<PMS063_GetJobCrPart_Result>();
+            }
+            else
+            {
+                if (data.Header.STATUSID == STATUS_DURING_APPROVE)
+                {
+                    foreach (var item in data.Parts)
+                    {
+                        item.OUT_CLEAN = item.OUT_CLEAN ?? item.IN_CLEAN;
+                        item.OUT_CLEAN_BOOL = item.OUT_CLEAN_BOOL ?? item.IN_CLEAN_BOOL;
+                        item.OUT_APPEARANCE = item.OUT_APPEARANCE ?? item.IN_APPEARANCE;
+                        item.OUT_APPEARANCE_BOOL = item.OUT_APPEARANCE_BOOL ?? item.IN_APPEARANCE_BOOL;
+                    }
+                }
+            }
 
-            data.PersonalChecklist= svc.sp_PMS063_GetPersonalChecklist(row.CHECK_REPH_ID).ToList();
+            data.PersonalChecklist = svc.sp_PMS063_GetPersonalChecklist(row.CHECK_REPH_ID).ToList();
             if (data.PersonalChecklist == null)
                 data.PersonalChecklist = new List<PMS063_GetPersonalChecklist_Result>();
 
@@ -216,6 +258,33 @@ namespace FLEX.API.Modules.PMS.Controllers
             }
         }
 
+        [HttpPost]
+        public ActionResult<List<PMS062_GetInQty_Result>> sp_PMS063_GetInQty(GetInQtyParam_CR param)
+        {
+            try
+            {
+                if (param == null)
+                {
+                    return Ok(new List<PMS062_GetInQty_Result>());
+                }
+
+                var detail = param.ITEMS.Select(item => new InQtyItem(){
+                        PARTS_LOC_CD = item.LOC_CD,
+                        PARTS_ITEM_CD = item.ITEM_CD,
+                        UNITCODE = item.UNITCODE,
+                }).ToList();
+
+                var xml = XmlUtil.ConvertToXml_Store(detail);
+                var result = svc.sp_PMS062_GetInQty(param.CHECK_REPH_ID, xml);
+                //return Ok(new List<string>() { result }); ;
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.GetBaseException());
+            }
+        }
+
 
 
         [HttpPost]
@@ -232,7 +301,7 @@ namespace FLEX.API.Modules.PMS.Controllers
             }
         }
 
-       
+
 
         [HttpPost]
         public ActionResult<string> PMS062_SaveData(PMS061_DTO data)
@@ -289,7 +358,7 @@ namespace FLEX.API.Modules.PMS.Controllers
                 return BadRequest(ex.GetBaseException());
             }
         }
-        
+
         [HttpPost]
         public ActionResult<string> PMS063_Approve(PMS063_DTO data)
         {
@@ -490,7 +559,7 @@ namespace FLEX.API.Modules.PMS.Controllers
         }
 
         [HttpPost]
-        public ActionResult<List<FileTemplate>> LoadMachineAttachment (SingleParam param)
+        public ActionResult<List<FileTemplate>> LoadMachineAttachment(SingleParam param)
         {
             try
             {

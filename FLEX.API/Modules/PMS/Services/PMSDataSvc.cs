@@ -347,21 +347,23 @@ namespace FLEX.API.Modules.Services.PMS
                         userCd,
                         Constant.DEFAULT_MACHINE
                     );
-
-                    if (partTransaction != null)
-                    {
-                        var xmlTrans = XmlUtil.ConvertToXml_Store(partTransaction);
-                        ct.Database.ExecuteSqlRaw("sp_PMS062_SaveCheckJobTransaction {0}, {1}, {2}, {3}, {4}, {5}, {6}",
-                            hid,
-                            h.CHECK_REP_NO,
-                            h.TEST_DATE?.ToLocalTime(),
-                            h.MACHINE_NO,
-                            xmlTrans,
-                            userCd,
-                            Constant.DEFAULT_MACHINE
-                        );
-                    }
+                    
                 }
+
+                if (partTransaction != null)
+                {
+                    var xmlTrans = XmlUtil.ConvertToXml_Store(partTransaction);
+                    ct.Database.ExecuteSqlRaw("sp_PMS062_SaveCheckJobTransaction {0}, {1}, {2}, {3}, {4}, {5}, {6}",
+                        hid,
+                        h.CHECK_REP_NO,
+                        h.TEST_DATE?.ToLocalTime(),
+                        h.MACHINE_NO,
+                        xmlTrans,
+                        userCd,
+                        Constant.DEFAULT_MACHINE
+                    );
+                }
+
                 #endregion
 
                 #region approver
@@ -767,7 +769,7 @@ namespace FLEX.API.Modules.Services.PMS
             Validate_PMS063(data.Header.CHECK_REPH_ID, data.Header.COMPLETE_DATE?.ToLocalTime(), parts);
 
             // get transaction           
-            var partTransaction = GetPartTransaction(parts, data.Header.CHECK_REPH_ID, data.Header.TEST_DATE?.ToLocalTime(), null);
+            var partTransaction = GetPartTransaction(parts, data.Header.CHECK_REPH_ID, data.Header.COMPLETE_DATE?.ToLocalTime(), null);
             return PMS063_SaveAll(
                 data.Header,
                 data.PersonInCharge,
@@ -1006,7 +1008,7 @@ namespace FLEX.API.Modules.Services.PMS
                     ct.Database.ExecuteSqlRaw("sp_PMS062_SaveCheckJobTransaction  {0}, {1}, {2}, {3}, {4}, {5}, {6}",
                         hid,
                         h.CHECK_REP_NO,
-                        h.TEST_DATE?.ToLocalTime(),
+                        h.COMPLETE_DATE?.ToLocalTime(),
                         h.MACHINE_NO,
                         xmlTrans,
                         userCd,
@@ -1222,14 +1224,17 @@ namespace FLEX.API.Modules.Services.PMS
 
             Validate_PMS063(data.Header.CHECK_REPH_ID, data.Header.COMPLETE_DATE?.ToLocalTime(), parts);
 
-            var toolsData = data.Tools.Where(p => p.OUT_USEDQTY > 0 || p.REQUEST_QTY > 0).ToList();
+            //var toolsData = data.Tools.Where(p => p.OUT_USEDQTY > 0 || p.REQUEST_QTY > 0).ToList();
 
 
-            var partTransaction = GetPartTransaction(parts, data.Header.CHECK_REPH_ID, data.Header.TEST_DATE?.ToLocalTime(), null);
+            var partTransaction = GetPartTransaction(parts, data.Header.CHECK_REPH_ID, data.Header.COMPLETE_DATE?.ToLocalTime(), null);
             data.Header.CHECK_REPH_ID = PMS063_SaveAll(
                 data.Header,
                 data.PersonInCharge,
-                toolsData,
+
+                //toolsData,
+                data.Tools,
+
                 partsData,
                 partTransaction,
                 null,
@@ -1269,7 +1274,7 @@ namespace FLEX.API.Modules.Services.PMS
                 }).ToList();
                 Validate_PMS063(data.Header.CHECK_REPH_ID, data.Header.COMPLETE_DATE?.ToLocalTime(), parts);
                 var toolsData = data.Tools.Where(p => p.OUT_USEDQTY > 0 || p.REQUEST_QTY > 0).ToList();
-                var partTransaction = GetPartTransaction(parts, data.Header.CHECK_REPH_ID, data.Header.TEST_DATE?.ToLocalTime(), null);
+                var partTransaction = GetPartTransaction(parts, data.Header.CHECK_REPH_ID, data.Header.COMPLETE_DATE?.ToLocalTime(), null);
 
                 data.Header.CHECK_REPH_ID = PMS063_SaveAll(
                     data.Header,
