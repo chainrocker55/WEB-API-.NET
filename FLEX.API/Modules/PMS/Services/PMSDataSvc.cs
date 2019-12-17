@@ -151,6 +151,9 @@ namespace FLEX.API.Modules.Services.PMS
             ValidateJobUpdateDate(data.Header.CHECK_REPH_ID, data.Header.LASTUPDATEDATETIME);
             using (var trans = new TransactionScope())
             {
+                if (data.Header.STATUSID == STATUS_ACTIVE_PLAN)
+                    data.Header.STATUSID = STATUS_NEW;
+
                 var hid = ct.PMS061_SaveData.FromSqlRaw("sp_PMS061_InsertOrUpdateCheckJobHeader {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, {17}, {18}, {19}, {20}, {21}, {22}, {23}, {24}, {25}, {26}, {27}, {28}",
                     data.Header.CHECK_REPH_ID,
                     data.Header.CHECK_REP_NO,
@@ -265,6 +268,9 @@ namespace FLEX.API.Modules.Services.PMS
             ValidateJobUpdateDate(h.CHECK_REPH_ID, h.LASTUPDATEDATETIME);
             using (var trans = new TransactionScope())
             {
+                if (h.STATUSID == STATUS_ACTIVE_PLAN)
+                    h.STATUSID = STATUS_NEW;
+
                 var hid = ct.PMS061_SaveData.FromSqlRaw("sp_PMS061_InsertOrUpdateCheckJobHeader {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, {17}, {18}, {19}, {20}, {21}, {22}, {23}, {24}, {25}, {26}, {27}, {28}",
                     h.CHECK_REPH_ID,
                     h.CHECK_REP_NO,
@@ -418,10 +424,12 @@ namespace FLEX.API.Modules.Services.PMS
             foreach (var item in partInv)
             {
                 decimal remainQty = item.INVQTY;
-                foreach (var oh in onhand)
+                var itemOh = onhand.Where(d => d.ITEM_CD == item.PARTS_ITEM_CD && d.AVAILABLE_AT_DATE>0).ToList();
+                foreach (var oh in itemOh)
                 {
                     if (remainQty <= 0)
                         break;
+
 
                     decimal qty = Math.Min(remainQty, oh.AVAILABLE_AT_DATE ?? 0);
                     result.Add(new PMS062_Transaction()
@@ -840,6 +848,10 @@ namespace FLEX.API.Modules.Services.PMS
             ValidateJobUpdateDate(h.CHECK_REPH_ID, h.LASTUPDATEDATETIME);
             using (var trans = new TransactionScope())
             {
+
+                if (h.STATUSID == STATUS_ACTIVE_PLAN)
+                    h.STATUSID = STATUS_NEW;
+
                 var hid = ct.PMS061_SaveData.FromSqlRaw("sp_PMS061_InsertOrUpdateCheckJobHeader {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, {17}, {18}, {19}, {20}, {21}, {22}, {23}, {24}, {25}, {26}, {27}, {28}",
                     h.CHECK_REPH_ID,
                     h.CHECK_REP_NO,
