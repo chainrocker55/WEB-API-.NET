@@ -127,6 +127,8 @@ namespace FLEX.API.Context
         public DbSet<String_Result> sp_PMS062_GetApprover { get; set; }
 
         public DbSet<sp_PMS031_LoadAttachment_Result> sp_PMS031_LoadAttachment { get; set; }
+
+        public DbSet<String_Result> sp_PMS062_ValidateDateInPeriod { get; set; }
         #endregion
 
     }

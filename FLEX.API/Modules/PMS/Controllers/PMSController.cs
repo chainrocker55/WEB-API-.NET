@@ -418,6 +418,21 @@ namespace FLEX.API.Modules.PMS.Controllers
             }
         }
 
+        [HttpPost]
+        public ActionResult<string> PMS062_Approve(PMS061_DTO data)
+        {
+            try
+            {
+                var result = svc.PMS062_Approve(data);
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.GetBaseException());
+            }
+        }
+
 
         [HttpPost]
         public ActionResult<string> PMS062_Revise(PMS061_DTO data)

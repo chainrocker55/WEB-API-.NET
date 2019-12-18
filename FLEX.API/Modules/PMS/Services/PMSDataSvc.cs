@@ -30,6 +30,7 @@ namespace FLEX.API.Modules.Services.PMS
         List<PMS062_GetInQty_Result> sp_PMS062_GetInQty(string CHECK_REPH_ID, string xml);
         List<DLG045_ItemFindDialogWithParam_Result> sp_DLG045_ItemFindDialogWithParam(DLG045_Search_Criteria criteria);
         string PMS062_SendToApprove(PMS061_DTO data);
+        string PMS062_Approve(PMS061_DTO data);
         string PMS062_Revise(PMS061_DTO data);
         void PMS062_Cancel(PMS061_DTO data);
 
@@ -52,6 +53,8 @@ namespace FLEX.API.Modules.Services.PMS
         List<sp_PMS062_LoadApproveHistory_Result> sp_PMS062_LoadApproveHistory(string stringValue);
         List<String_Result> PMS062_GetApprover(string cHECK_REPH_ID);
         List<FileTemplate> sp_PMS031_LoadAttachment(string stringValue);
+
+        string sp_PMS062_ValidateDateInPeriod(DateTime? targetDate);
     }
 
     public class PMSDataSvc : IPMSDataSvc
@@ -104,6 +107,11 @@ namespace FLEX.API.Modules.Services.PMS
         public List<PMS061_GetCheckJobH_Result> sp_PMS061_GetCheckJobH(string CHECK_REPH_ID)
         {
             return ct.sp_PMS061_GetCheckJobH.FromSqlRaw("sp_PMS061_GetCheckJobH {0}", CHECK_REPH_ID).ToList();
+        }
+
+        public string sp_PMS062_ValidateDateInPeriod(DateTime? targetDate)
+        {
+            return ct.sp_PMS062_ValidateDateInPeriod.FromSqlRaw("sp_PMS062_ValidateDateInPeriod {0}", targetDate).ToList().FirstOrDefault()?.VALUE;
         }
 
         public List<PMS063_GetCrHeader_Result> sp_PMS063_GetCrHeader(string CHECK_REPH_ID)
@@ -266,6 +274,8 @@ namespace FLEX.API.Modules.Services.PMS
         public string PMS062_SaveAll(PMS061_GetCheckJobH_Result h, List<PMS061_GetCheckJobPersonInCharge_Result> personInCharge, List<PMS062_GetJobPmChecklist_Result> checklist, List<PMS062_GetJobPmPart_Result> partsData, List<PMS062_Transaction> partTransaction, List<string> approver, ApproveHistory approveHistory, string userCd, bool sendNotification)
         {
             ValidateJobUpdateDate(h.CHECK_REPH_ID, h.LASTUPDATEDATETIME);
+            ValidateDateInPeriod(h.TEST_DATE?.ToLocalTime());
+
             using (var trans = new TransactionScope())
             {
                 if (h.STATUSID == STATUS_ACTIVE_PLAN)
@@ -353,7 +363,7 @@ namespace FLEX.API.Modules.Services.PMS
                         userCd,
                         Constant.DEFAULT_MACHINE
                     );
-                    
+
                 }
 
                 if (partTransaction != null)
@@ -409,6 +419,18 @@ namespace FLEX.API.Modules.Services.PMS
             }
         }
 
+        private void ValidateDateInPeriod(DateTime? targetDate)
+        {
+            if (targetDate == null)
+                return;
+
+            var result = this.sp_PMS062_ValidateDateInPeriod(targetDate);
+            if (result == "Y")
+                return;
+            else
+                throw new ServiceException("VLM0782");
+        }
+
         public List<PMS062_Transaction> GetPartTransaction(List<PMS062_GetJobPmPart_Result> parts, string hid, DateTime? testDate, List<PMS062_GetItemOnhandAtDate_Result> onhand)
         {
             var result = new List<PMS062_Transaction>();
@@ -424,7 +446,7 @@ namespace FLEX.API.Modules.Services.PMS
             foreach (var item in partInv)
             {
                 decimal remainQty = item.INVQTY;
-                var itemOh = onhand.Where(d => d.ITEM_CD == item.PARTS_ITEM_CD && d.AVAILABLE_AT_DATE>0).ToList();
+                var itemOh = onhand.Where(d => d.ITEM_CD == item.PARTS_ITEM_CD && d.AVAILABLE_AT_DATE > 0).ToList();
                 foreach (var oh in itemOh)
                 {
                     if (remainQty <= 0)
@@ -467,12 +489,12 @@ namespace FLEX.API.Modules.Services.PMS
 
             if (partData.Count > 0)
             {
-                ValidateOnHand(data.Header.CHECK_REPH_ID, DateTime.Today, parts);
+                //ValidateOnHand(data.Header.CHECK_REPH_ID, DateTime.Today, parts);
 
-                if (DateTime.Today != data.Header.TEST_DATE?.ToLocalTime())
-                {
+                //if (DateTime.Today != data.Header.TEST_DATE?.ToLocalTime())
+                //{
                     ValidateOnHand(data.Header.CHECK_REPH_ID, data.Header.TEST_DATE?.ToLocalTime(), parts);
-                }
+                //}
             }
 
             data.PmParts = partData;
@@ -484,12 +506,12 @@ namespace FLEX.API.Modules.Services.PMS
         {
             if (parts.Count > 0)
             {
-                ValidateOnHand(CHECK_REPH_ID, DateTime.Today, parts);
+                //ValidateOnHand(CHECK_REPH_ID, DateTime.Today, parts);
 
-                if (DateTime.Today != COMPLETE_DATE)
-                {
+                //if (DateTime.Today != COMPLETE_DATE)
+                //{
                     ValidateOnHand(CHECK_REPH_ID, COMPLETE_DATE, parts);
-                }
+                //}
             }
 
             return true;
@@ -568,28 +590,77 @@ namespace FLEX.API.Modules.Services.PMS
             var approveHistory = GetApproveHistory(data.Header, data.CurrentUser);
             SetApproverData(data.Header, approveList);
             approveHistory.APPROVE_STATUS = "APPROVE"; //data.Header.STATUSID;
+                                                       //if (data.Header.STATUSID == STATUS_COMPLETE)
+                                                       //{
+            var partTransaction = GetPartTransaction(data.PmParts, data.Header.CHECK_REPH_ID, data.Header.TEST_DATE?.ToLocalTime(), null);
+            data.Header.CHECK_REPH_ID = PMS062_SaveAll(
+                data.Header,
+                data.PersonInCharge,
+                data.PmChecklist,
+                data.PmParts,
+                partTransaction,
+                GetApprover(data.Header, approveList),
+                approveHistory,
+                data.CurrentUser,
+                true
+            );
+            //}
+            //else
+            //{
+            //    data.Header.CHECK_REPH_ID = PMS062_SaveAll(
+            //        data.Header,
+            //        data.PersonInCharge,
+            //        data.PmChecklist,
+            //        data.PmParts,
+            //        null,
+            //        GetApprover(data.Header, approveList),
+            //        approveHistory,
+            //        data.CurrentUser,
+            //        true
+            //    );
+            //}
+
+            return data.Header.CHECK_REPH_ID;
+        }
+
+        public string PMS062_Approve(PMS061_DTO data)
+        {
+            // validate data
+            Validate_PMS062(data);
+
+            //validate approve route
+            var approveList = ct.PMS062_GetApproveRoute.FromSqlRaw("sp_PMS062_GetApproveRoute {0}, {1}", data.Header.MACHINE_NO, data.Header.MACHINE_LOC_CD).ToList();
+            if (approveList.Count == 0)
+            {
+                throw new ServiceException("VLM0439");
+            }
+
+            var approveHistory = GetApproveHistory(data.Header, data.CurrentUser);
+            SetApproverData(data.Header, approveList);
+            approveHistory.APPROVE_STATUS = "APPROVE"; //data.Header.STATUSID;
+
             if (data.Header.STATUSID == STATUS_COMPLETE)
             {
                 var partTransaction = GetPartTransaction(data.PmParts, data.Header.CHECK_REPH_ID, data.Header.TEST_DATE?.ToLocalTime(), null);
                 data.Header.CHECK_REPH_ID = PMS062_SaveAll(
-                    data.Header,
-                    null,
-                    null,
-                    null,
-                    partTransaction,
-                    GetApprover(data.Header, approveList),
-                    approveHistory,
-                    data.CurrentUser,
-                    true
-                );
+                   data.Header,
+                   null,
+                   null,
+                   null,
+                   partTransaction,
+                   GetApprover(data.Header, approveList),
+                   approveHistory,
+                   data.CurrentUser,
+                   true
+               );
             }
             else
             {
                 data.Header.CHECK_REPH_ID = PMS062_SaveAll(
                     data.Header,
-                    null,
-                    null,
-                    null,
+                    data.PersonInCharge,
+                    data.PmChecklist,
+                    data.PmParts,
                     null,
                     GetApprover(data.Header, approveList),
                     approveHistory,
@@ -846,6 +917,8 @@ namespace FLEX.API.Modules.Services.PMS
         {
 
             ValidateJobUpdateDate(h.CHECK_REPH_ID, h.LASTUPDATEDATETIME);
+            ValidateDateInPeriod(h.COMPLETE_DATE?.ToLocalTime());
+
             using (var trans = new TransactionScope())
             {
 
