@@ -16,7 +16,7 @@ namespace FLEX.API.Context
 
         public FLEXContext(DbContextOptions options) : base(options)
         {
-
+                Database.SetCommandTimeout(300);
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

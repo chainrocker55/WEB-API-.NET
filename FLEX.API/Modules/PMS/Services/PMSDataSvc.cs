@@ -274,7 +274,6 @@ namespace FLEX.API.Modules.Services.PMS
         public string PMS062_SaveAll(PMS061_GetCheckJobH_Result h, List<PMS061_GetCheckJobPersonInCharge_Result> personInCharge, List<PMS062_GetJobPmChecklist_Result> checklist, List<PMS062_GetJobPmPart_Result> partsData, List<PMS062_Transaction> partTransaction, List<string> approver, ApproveHistory approveHistory, string userCd, bool sendNotification)
         {
             ValidateJobUpdateDate(h.CHECK_REPH_ID, h.LASTUPDATEDATETIME);
-            ValidateDateInPeriod(h.TEST_DATE?.ToLocalTime());
 
             using (var trans = new TransactionScope())
             {
@@ -477,6 +476,8 @@ namespace FLEX.API.Modules.Services.PMS
 
         public bool Validate_PMS062(PMS061_DTO data)
         {
+            ValidateDateInPeriod(data.Header.TEST_DATE?.ToLocalTime());
+
             var partData = data.PmParts.Where(p => p.REQUEST_QTY > 0).ToList();
             var parts = partData.Select(p => new PMS062_GetJobPmPart_Result()
             {
@@ -738,7 +739,7 @@ namespace FLEX.API.Modules.Services.PMS
 
         private void SetApproverData(PMS063_GetCrHeader_Result mData, List<PMS062_GetApproveRoute_Result> approveList)
         {
-            var approve = approveList.FirstOrDefault();
+            var approve = approveList?.FirstOrDefault();
             //var maxLevel = approveList.Select(a => a.APPROVE_LEVEL).Max()??0;
 
             mData.APPROVE_ID = approve?.APPROVE_ID;
@@ -746,10 +747,19 @@ namespace FLEX.API.Modules.Services.PMS
                                 .Where(a => (a.APPROVE_LEVEL ?? 0) > (mData.CUR_LEVEL ?? 0))
                                 .Select(a => a.APPROVE_LEVEL)
                                 .Min() ?? 0;
-            mData.NEXT_LEVEL = approveList
+
+            if (mData.CUR_LEVEL == 0)
+            {
+                mData.NEXT_LEVEL = null;
+            }
+            else
+            {
+                mData.NEXT_LEVEL = approveList
                                 .Where(a => (a.APPROVE_LEVEL ?? 0) > (mData.CUR_LEVEL ?? 0))
                                 .Select(a => a.APPROVE_LEVEL)
                                 .Min() ?? 0;
+            }
+
             mData.STATUSID = mData.CUR_LEVEL == 0 ? STATUS_COMPLETE : STATUS_DURING_APPROVE;
         }
 
@@ -835,8 +845,10 @@ namespace FLEX.API.Modules.Services.PMS
 
         public string PMS063_SaveData(PMS063_DTO data)
         {
+            ValidateDateInPeriod(data.Header.COMPLETE_DATE?.ToLocalTime());
+
             // validate data
-            var partData = data.Parts.Where(p => p.REQUEST_QTY > 0).ToList();
+            var partData = data.Parts.Where(p => p.OUT_USEDQTY > 0 || p.REQUEST_QTY > 0).ToList();
             var parts = partData.Select(p => new PMS062_GetJobPmPart_Result()
             {
                 PARTS_ITEM_CD = p.ITEM_CD,
@@ -853,7 +865,7 @@ namespace FLEX.API.Modules.Services.PMS
                 data.Header,
                 data.PersonInCharge,
                 data.Tools,
-                data.Parts,
+                partData,
                 partTransaction,
                 data.PersonalChecklist,
                 data.Check,
@@ -866,6 +878,8 @@ namespace FLEX.API.Modules.Services.PMS
 
         public string PMS063_Confirm(PMS063_DTO data)
         {
+            ValidateDateInPeriod(data.Header.COMPLETE_DATE?.ToLocalTime());
+
             if (data.Header.STATUSID == STATUS_NEW)
                 data.Header.STATUSID = STATUS_DURING_ASSIGN;
             else if (data.Header.STATUSID == STATUS_DURING_ASSIGN)
@@ -917,7 +931,7 @@ namespace FLEX.API.Modules.Services.PMS
         {
 
             ValidateJobUpdateDate(h.CHECK_REPH_ID, h.LASTUPDATEDATETIME);
-            ValidateDateInPeriod(h.COMPLETE_DATE?.ToLocalTime());
+            
 
             using (var trans = new TransactionScope())
             {
@@ -1166,7 +1180,7 @@ namespace FLEX.API.Modules.Services.PMS
 
                     if (machineData?.CR_PERIOD1 != null && machineData?.CR_PERIOD1_ID != null && h.COMPLETE_DATE?.ToLocalTime() != null)
                     {
-
+                        var personInCharge_Cr = sp_PMS061_GetCheckJobPersonInCharge(null, h.MACHINE_NO);
                         var sch1 = ScheduleUtil.GetNextDate(new Schedule()
                         {
                             PERIOD = machineData?.CR_PERIOD1,
@@ -1175,7 +1189,7 @@ namespace FLEX.API.Modules.Services.PMS
                             //END_DATE = null,
                             //START_DATE = h.COMPLETE_DATE
                         }, h.COMPLETE_DATE?.ToLocalTime());
-                        var sch1_hid = GenerateAutoJob(ct, h, sch1, userCd);
+                        var sch1_hid = GenerateAutoJob(ct, h, sch1, personInCharge_Cr, userCd);
 
                         DateTime? sch2 = null;
                         string sch2_id = null;
@@ -1190,7 +1204,7 @@ namespace FLEX.API.Modules.Services.PMS
                                 //START_DATE = sch1
                             }, sch1);
 
-                            sch2_id = GenerateAutoJob(ct, h, sch2.Value, userCd);
+                            sch2_id = GenerateAutoJob(ct, h, sch2.Value, personInCharge_Cr, userCd);
                         }
 
                         ct.Database.ExecuteSqlRaw("sp_PMS063_InsertOrUpdateCrAfterService {0}, {1}, {2}, {3}, {4}, {5}, {6}",
@@ -1227,7 +1241,7 @@ namespace FLEX.API.Modules.Services.PMS
 
         }
 
-        private string GenerateAutoJob(FLEXContext ct, PMS063_GetCrHeader_Result h, DateTime sch1, string userCd)
+        private string GenerateAutoJob(FLEXContext ct, PMS063_GetCrHeader_Result h, DateTime sch1, List<PMS061_GetCheckJobPersonInCharge_Result> personInCharge, string userCd)
         {
             var sch1_hid = ct.PMS061_SaveData.FromSqlRaw("sp_PMS061_InsertOrUpdateCheckJobHeader {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, {17}, {18}, {19}, {20}, {21}, {22}, {23}, {24}, {25}, {26}, {27}, {28}",
                 null,
@@ -1251,7 +1265,7 @@ namespace FLEX.API.Modules.Services.PMS
                 "N",
                 4, // for generate cr
                 "Y",
-                null,
+                h.CHECK_REP_NO,
                 null,
                 null,
                 null,
@@ -1277,11 +1291,30 @@ namespace FLEX.API.Modules.Services.PMS
 
             );
 
+            for (int i = 0; i < personInCharge.Count; i++)
+            {
+                var item = personInCharge[i];
+                item.CHECK_REPH_ID = sch1_hid;
+                item.SEQ = i + 1;
+                item.DELETEFLAG = "N";
+            }
+
+            var xml = XmlUtil.ConvertToXml_Store(personInCharge);
+            ct.Database.ExecuteSqlRaw("sp_PMS061_InsertOrUpdateCheckJobPersonInCharge {0}, {1}, {2}, {3}",
+                sch1_hid,
+                xml,
+
+                userCd,
+                Constant.DEFAULT_MACHINE
+            );
+
             return sch1_hid;
         }
 
         public string PMS063_SendToApprove(PMS063_DTO data)
         {
+            ValidateDateInPeriod(data.Header.COMPLETE_DATE?.ToLocalTime());
+
             List<PMS062_GetApproveRoute_Result> approveList = null;
             if ((data.Header.SKIP_APPROVAL ?? "N") == "N")
             {
@@ -1335,6 +1368,8 @@ namespace FLEX.API.Modules.Services.PMS
 
         public string PMS063_Approve(PMS063_DTO data)
         {
+            ValidateDateInPeriod(data.Header.COMPLETE_DATE?.ToLocalTime());
+
             //validate approve route
             var approveList = ct.PMS062_GetApproveRoute.FromSqlRaw("sp_PMS063_GetApproveRoute {0}, {1}", data.Header.MACHINE_NO, data.Header.MACHINE_LOC_CD).ToList();
             if (approveList.Count == 0)
@@ -1347,9 +1382,10 @@ namespace FLEX.API.Modules.Services.PMS
             //approveHistory.APPROVE_STATUS = data.Header.STATUSID;
             approveHistory.APPROVE_STATUS = "APPROVE";
 
+            var partsData = data.Parts.Where(p => p.OUT_USEDQTY > 0 || p.REQUEST_QTY > 0).ToList();
+
             if (data.Header.STATUSID == STATUS_COMPLETE)
             {
-                var partsData = data.Parts.Where(p => p.OUT_USEDQTY > 0 || p.REQUEST_QTY > 0).ToList();
                 var parts = partsData.Select(p => new PMS062_GetJobPmPart_Result()
                 {
                     PARTS_ITEM_CD = p.ITEM_CD,
@@ -1364,8 +1400,8 @@ namespace FLEX.API.Modules.Services.PMS
                 data.Header.CHECK_REPH_ID = PMS063_SaveAll(
                     data.Header,
                     null,
-                    null,
-                    null,
+                    data.Tools,
+                    partsData,
                     partTransaction,
                     data.PersonalChecklist,
                     data.Check,
@@ -1380,8 +1416,8 @@ namespace FLEX.API.Modules.Services.PMS
                 data.Header.CHECK_REPH_ID = PMS063_SaveAll(
                     data.Header,
                     null,
-                    null,
-                    null,
+                    data.Tools,
+                    partsData,
                     null,
                     data.PersonalChecklist,
                     data.Check,

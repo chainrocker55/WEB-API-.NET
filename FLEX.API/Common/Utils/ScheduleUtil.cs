@@ -8,9 +8,9 @@ namespace FLEX.API.Common.Utils
     public class ScheduleUtil
     {
         private const int DayPeriodId = 1;
-        private const int WeekPeriodId = 7;
-        private const int MonthPeriodId = 30;
-        private const int YearPeriodId = 365;
+        private const int WeekPeriodId = 2;
+        private const int MonthPeriodId = 3;
+        private const int YearPeriodId = 4;
 
         public static int GetPeriodDays(Schedule sch)
         {
