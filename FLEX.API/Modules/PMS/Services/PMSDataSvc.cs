@@ -274,13 +274,13 @@ namespace FLEX.API.Modules.Services.PMS
         public string PMS062_SaveAll(PMS061_GetCheckJobH_Result h, List<PMS061_GetCheckJobPersonInCharge_Result> personInCharge, List<PMS062_GetJobPmChecklist_Result> checklist, List<PMS062_GetJobPmPart_Result> partsData, List<PMS062_Transaction> partTransaction, List<string> approver, ApproveHistory approveHistory, string userCd, bool sendNotification)
         {
             ValidateJobUpdateDate(h.CHECK_REPH_ID, h.LASTUPDATEDATETIME);
-
+            string hid = null;
             using (var trans = new TransactionScope())
             {
                 if (h.STATUSID == STATUS_ACTIVE_PLAN)
                     h.STATUSID = STATUS_NEW;
 
-                var hid = ct.PMS061_SaveData.FromSqlRaw("sp_PMS061_InsertOrUpdateCheckJobHeader {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, {17}, {18}, {19}, {20}, {21}, {22}, {23}, {24}, {25}, {26}, {27}, {28}",
+                hid = ct.PMS061_SaveData.FromSqlRaw("sp_PMS061_InsertOrUpdateCheckJobHeader {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, {17}, {18}, {19}, {20}, {21}, {22}, {23}, {24}, {25}, {26}, {27}, {28}",
                     h.CHECK_REPH_ID,
                     h.CHECK_REP_NO,
                     h.MACHINE_SCHEDULEID,
@@ -407,15 +407,16 @@ namespace FLEX.API.Modules.Services.PMS
                 }
                 #endregion
 
-
-                if (sendNotification)
-                {
-                    SendJobNotification(hid, "PMS062");
-                }
-
                 trans.Complete();
-                return hid;
+                
             }
+
+            if (sendNotification)
+            {
+                SendJobNotification(hid, "PMS062");
+            }
+
+            return hid;
         }
 
         private void ValidateDateInPeriod(DateTime? targetDate)
@@ -931,15 +932,15 @@ namespace FLEX.API.Modules.Services.PMS
         {
 
             ValidateJobUpdateDate(h.CHECK_REPH_ID, h.LASTUPDATEDATETIME);
-            
 
+            string hid = null;
             using (var trans = new TransactionScope())
             {
 
                 if (h.STATUSID == STATUS_ACTIVE_PLAN)
                     h.STATUSID = STATUS_NEW;
 
-                var hid = ct.PMS061_SaveData.FromSqlRaw("sp_PMS061_InsertOrUpdateCheckJobHeader {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, {17}, {18}, {19}, {20}, {21}, {22}, {23}, {24}, {25}, {26}, {27}, {28}",
+                hid = ct.PMS061_SaveData.FromSqlRaw("sp_PMS061_InsertOrUpdateCheckJobHeader {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, {17}, {18}, {19}, {20}, {21}, {22}, {23}, {24}, {25}, {26}, {27}, {28}",
                     h.CHECK_REPH_ID,
                     h.CHECK_REP_NO,
                     h.MACHINE_SCHEDULEID,
@@ -1224,18 +1225,17 @@ namespace FLEX.API.Modules.Services.PMS
 
                 #endregion
 
-                if (sendNotification)
-                {
-                    SendJobNotification(hid, "PMS063");
-                }
-
-
-
-
-
                 trans.Complete();
-                return hid;
+
+                
             }
+
+            if (sendNotification)
+            {
+                SendJobNotification(hid, "PMS063");
+            }
+
+            return hid;
 
 
 

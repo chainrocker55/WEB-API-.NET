@@ -540,7 +540,7 @@ namespace FLEX.API.Modules.PMS.Controllers
         }
 
         [HttpPost]
-        public ActionResult<string> LoadApproveHistory(SingleParam param)
+        public ActionResult<sp_PMS062_LoadApproveHistory_Result> LoadApproveHistory(SingleParam param)
         {
             try
             {

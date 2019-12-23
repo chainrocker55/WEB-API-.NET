@@ -25,5 +25,11 @@ namespace FLEX.API.Modules.PMS.Models
             get;
             set;
         }
+
+        public string REMARK
+        {
+            get;
+            set;
+        }
     }
 }
