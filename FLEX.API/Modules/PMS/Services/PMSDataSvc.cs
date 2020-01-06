@@ -6,8 +6,11 @@ using FLEX.API.Models;
 using FLEX.API.Modules.PMS.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using OfficeOpenXml;
+using OfficeOpenXml.Drawing;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -55,6 +58,8 @@ namespace FLEX.API.Modules.Services.PMS
         List<FileTemplate> sp_PMS031_LoadAttachment(string stringValue);
 
         string sp_PMS062_ValidateDateInPeriod(DateTime? targetDate);
+        string GetWithdrawalSlipPM(string CHECK_REPH_ID);
+        string GetWithdrawalSlipCR(string CHECK_REPH_ID);
     }
 
     public class PMSDataSvc : IPMSDataSvc
@@ -1530,6 +1535,291 @@ namespace FLEX.API.Modules.Services.PMS
             }).ToList();
 
             return attachment;
+        }
+
+        public string GetWithdrawalSlipPM(string CHECK_REPH_ID)
+        {
+            var data = ct.sp_RPMS001_PartsWithdrawalSlipPM.FromSqlRaw("sp_RPMS001_PartsWithdrawalSlipPM {0}", CHECK_REPH_ID).ToList();
+            if (data == null || data.Count == 0)
+            {
+                throw new Exception("No data found.");
+            }
+
+
+            #region Load template
+            string TmpPath = Path.Combine(Path.GetTempPath(), "_flexTempDir");
+
+            if (!Directory.Exists(TmpPath))
+                Directory.CreateDirectory(TmpPath);
+
+            string fileName = Path.Combine(TmpPath,
+                        String.Format("_tmpFile_{0:yyyyMMddHHmmss_ffffff}.{1}",
+                        DateTime.Now,
+                        "xlsx"));
+
+            string pdfName = Path.Combine(TmpPath,
+                        String.Format("_tmpFile_{0:yyyyMMddHHmmss_ffffff}.{1}",
+                        DateTime.Now,
+                        "pdf"));
+
+            String templateDocument = System.IO.Path.Combine(System.Environment.CurrentDirectory, "Report", "TEMPLATE_RPMS001_CR.xlsx");
+
+            FileInfo excelFile = new FileInfo(fileName);
+            FileInfo template = new FileInfo(templateDocument);
+
+            #endregion
+
+            int rowPerPage = 32; //29
+            int pageCols = 7;
+            int itemPerPage = 15;
+
+            var unitlist = ct.sp_Common_GetUnitDecimalDigit_KIBUN.FromSqlRaw("sp_Common_GetUnitDecimalDigit_KIBUN").ToList();
+
+            using (ExcelPackage package = new ExcelPackage(excelFile, template))
+            {
+                ExcelWorksheet sheet = package.Workbook.Worksheets[1];
+
+                #region header
+
+                var h = data.FirstOrDefault();
+                sheet.Cells[7, 3].Value = h.LOC_DESC;
+                sheet.Cells[3, 7].Value = h.CHECK_REP_NO;
+                sheet.SetValue("G7", h.REQUEST_DATE);
+
+                //if (CHECK_REPH_ID.Count == 1)
+                //{
+                    //QR Code
+                    var tempQR = new FlexQR()
+                    {
+                        CHECK_REP_NO = h.CHECK_REP_NO,
+                        WITHDRAWAL_TYPE = eKibunWithdrawalType.PartsWithdrawal.ToDescriptionString(),
+                    };
+                    Image qrCode = TextBoxExtension.ToQRCode(tempQR.ToQRCode());
+                    var qrPic = sheet.Drawings.AddPicture("QR" + 1, qrCode);
+                    qrPic.SetSize(100, 100);
+                    qrPic.SetPosition(1, 0, 1, 0);
+                //}
+                #endregion
+
+                #region  copy page
+                for (int i = 1; i < Math.Ceiling(data.Count * 1.0 / itemPerPage); i++)
+                // for (int i = 1; i <= 3; i++)
+                {
+                    sheet.Cells[1, 1, rowPerPage, pageCols].Copy(sheet.Cells[rowPerPage * i + 1, 1, rowPerPage * i + 1 + rowPerPage, pageCols]);
+
+                    Image logo = GetImage("Sheet1", package, "logo");
+                    if (logo != null)
+                    {
+                        var picture = sheet.Drawings.AddPicture("logo " + i.ToString(), logo);
+                        picture.SetPosition(rowPerPage * i + 1, 0, 2, 0);
+                    }
+
+                    Image qr = GetImage("Sheet1", package, "QR1");
+                    if (qr != null)
+                    {
+                        var qr2 = sheet.Drawings.AddPicture("QR" + (i + 1).ToString(), qr);
+                        qr2.SetSize(100, 100);
+                        qr2.SetPosition(rowPerPage * i + 1, 0, 1, 0);
+                    }
+
+                    sheet.Row(rowPerPage * i).PageBreak = true;
+                }
+                #endregion
+
+                #region details
+                int currentRow = 10,
+                    rowsCount = 0,
+                    iNextPageDetailRow = 18;
+
+                foreach (var o in data)
+                {
+
+                    sheet.Cells[currentRow, 2].Value = o.PARTS_ITEM_CD;
+                    sheet.Cells[currentRow, 3].Value = o.ITEM_DESC;
+                    sheet.Cells[currentRow, 4].Value = o.UNITCODE;
+
+                    sheet.Cells[currentRow, 5].Value = (o.REQUEST_QTY != null ? Convert.ToDecimal(o.REQUEST_QTY).ToString("#,0.###") : "");
+
+                    if (!string.IsNullOrEmpty(o.SHELF_NAME))
+                    {
+                        sheet.Cells[currentRow, 6].Value = string.Format("{0} - {1}", sheet.Cells[currentRow, 6].Value, o.SHELF_NAME);
+                    }
+
+                    rowsCount++;
+                    if (rowsCount == itemPerPage)
+                    {
+                        currentRow += iNextPageDetailRow;
+                        rowsCount = 0;
+                    }
+                    else
+                    {
+                        currentRow++;
+                    }
+                }
+
+
+
+                #endregion
+                //package.Workbook.Worksheets.Delete(1);
+                //package.Workbook.Worksheets.Delete(1);
+                //package.Workbook.Worksheets.Delete(1);
+                // sheet.Cells.Worksheet.Workbook.Styles.UpdateXml();
+                package.Save();
+
+                //Excel2PDF excel2Pdf = new Excel2PDF();
+                //if (excel2Pdf.ExportWorkbookToPdf(fileName, pdfName))
+                //{
+                //    Process.Start(pdfName);
+                //}
+                //FLEX.Common.Utils.ExcelUtil.PrintOut(fileName, !print);
+                return fileName;
+            }
+        }
+
+        public string GetWithdrawalSlipCR(string CHECK_REPH_ID)
+        {
+            var data = ct.sp_RPMS001_PartsWithdrawalSlipCorrective.FromSqlRaw("sp_RPMS001_PartsWithdrawalSlipCorrective {0}", CHECK_REPH_ID).ToList();
+
+            if (data == null || data.Count == 0) throw new Exception("No data found.");
+
+
+            #region Load template
+            string TmpPath = Path.Combine(Path.GetTempPath(), "_flexTempDir");
+
+            if (!Directory.Exists(TmpPath))
+                Directory.CreateDirectory(TmpPath);
+
+            string fileName = Path.Combine(TmpPath,
+                        String.Format("_tmpFile_{0:yyyyMMddHHmmss_ffffff}.{1}",
+                        DateTime.Now,
+                        "xlsx"));
+
+            string pdfName = Path.Combine(TmpPath,
+                        String.Format("_tmpFile_{0:yyyyMMddHHmmss_ffffff}.{1}",
+                        DateTime.Now,
+                        "pdf"));
+
+            String templateDocument = System.IO.Path.Combine(System.Environment.CurrentDirectory, "Report", "TEMPLATE_RPMS001_CR.xlsx");
+
+            FileInfo excelFile = new FileInfo(fileName);
+            FileInfo template = new FileInfo(templateDocument);
+
+            #endregion
+
+            int rowPerPage = 32; //29
+            int pageCols = 7;
+            int itemPerPage = 15;
+
+            var unitlist = ct.sp_Common_GetUnitDecimalDigit_KIBUN.FromSqlRaw("sp_Common_GetUnitDecimalDigit_KIBUN").ToList();
+
+            using (ExcelPackage package = new ExcelPackage(excelFile, template))
+            {
+                ExcelWorksheet sheet = package.Workbook.Worksheets[1];
+
+                #region header
+
+                var h = data.FirstOrDefault();
+                sheet.Cells[7, 3].Value = h.LOC_DESC;
+                sheet.Cells[3, 7].Value = h.CHECK_REP_NO;
+                sheet.SetValue("G7", h.REQUEST_DATE);
+
+                //if (CHECK_REPH_ID.Count == 1)
+                //{
+                    //QR Code
+                    var tempQR = new FlexQR()
+                    {
+                        CHECK_REP_NO = h.CHECK_REP_NO,
+                        WITHDRAWAL_TYPE = eKibunWithdrawalType.PartsWithdrawal.ToDescriptionString(),
+                    };
+                    Image qrCode = TextBoxExtension.ToQRCode(tempQR.ToQRCode());
+                    var qrPic = sheet.Drawings.AddPicture("QR" + 1, qrCode);
+                    qrPic.SetSize(100, 100);
+                    qrPic.SetPosition(1, 0, 1, 0);
+                //}
+                #endregion
+
+                #region  copy page
+                for (int i = 1; i < Math.Ceiling(data.Count * 1.0 / itemPerPage); i++)
+                // for (int i = 1; i <= 3; i++)
+                {
+                    sheet.Cells[1, 1, rowPerPage, pageCols].Copy(sheet.Cells[rowPerPage * i + 1, 1, rowPerPage * i + 1 + rowPerPage, pageCols]);
+
+                    Image logo = GetImage("Sheet1", package, "logo");
+                    if (logo != null)
+                    {
+                        var picture = sheet.Drawings.AddPicture("logo " + i.ToString(), logo);
+                        picture.SetPosition(rowPerPage * i + 1, 0, 2, 0);
+                    }
+
+                    Image qr = GetImage("Sheet1", package, "QR1");
+                    if (qr != null)
+                    {
+                        var qr2 = sheet.Drawings.AddPicture("QR" + (i + 1).ToString(), qr);
+                        qr2.SetSize(100, 100);
+                        qr2.SetPosition(rowPerPage * i + 1, 0, 1, 0);
+                    }
+
+                    sheet.Row(rowPerPage * i).PageBreak = true;
+                }
+                #endregion
+
+                #region details
+                int currentRow = 10,
+                    rowsCount = 0,
+                    iNextPageDetailRow = 18;
+
+                foreach (var o in data)
+                {
+
+                    sheet.Cells[currentRow, 2].Value = o.PARTS_ITEM_CD;
+                    sheet.Cells[currentRow, 3].Value = o.ITEM_DESC;
+                    sheet.Cells[currentRow, 4].Value = o.UNITCODE;
+
+                    sheet.Cells[currentRow, 5].Value = (o.REQUEST_QTY != null ? Convert.ToDecimal(o.REQUEST_QTY).ToString("#,0.###") : "");
+
+                    if (!string.IsNullOrEmpty(o.SHELF_NAME))
+                    {
+                        sheet.Cells[currentRow, 6].Value = string.Format("{0} - {1}", sheet.Cells[currentRow, 6].Value, o.SHELF_NAME);
+                    }
+
+                    rowsCount++;
+                    if (rowsCount == itemPerPage)
+                    {
+                        currentRow += iNextPageDetailRow;
+                        rowsCount = 0;
+                    }
+                    else
+                    {
+                        currentRow++;
+                    }
+                }
+
+
+
+                #endregion
+                //package.Workbook.Worksheets.Delete(1);
+                //package.Workbook.Worksheets.Delete(1);
+                //package.Workbook.Worksheets.Delete(1);
+                // sheet.Cells.Worksheet.Workbook.Styles.UpdateXml();
+                package.Save();
+
+                //Excel2PDF excel2Pdf = new Excel2PDF();
+                //if (excel2Pdf.ExportWorkbookToPdf(fileName, pdfName))
+                //{
+                //    Process.Start(pdfName);
+                //}
+                //FLEX.Common.Utils.ExcelUtil.PrintOut(fileName, !print);
+                return fileName;
+            }
+        }
+
+
+        public Image GetImage(string sheetname, ExcelPackage excelFile, string imageName)
+        {
+            var sheet = excelFile.Workbook.Worksheets[sheetname];
+            var pic = sheet.Drawings[imageName] as ExcelPicture;
+            Image retImage = pic != null ? pic.Image : null;
+            return retImage;
         }
     }
 }

@@ -12,7 +12,6 @@ namespace FLEX.API.Context
 {
     public class FLEXContext : DbContext
     {
-        
 
         public FLEXContext(DbContextOptions options) : base(options)
         {
@@ -54,6 +53,9 @@ namespace FLEX.API.Context
             modelBuilder.Entity<PMS060_UserDefaultValue>().HasNoKey();
             modelBuilder.Entity<sp_PMS062_LoadApproveHistory_Result>().HasNoKey();
             modelBuilder.Entity<sp_PMS031_LoadAttachment_Result>().HasNoKey();
+            modelBuilder.Entity<sp_RPMS001_PartsWithdrawalSlipPM_Result>().HasNoKey();
+            modelBuilder.Entity<sp_RPMS001_PartsWithdrawalSlipCorrective_Result>().HasNoKey();
+            modelBuilder.Entity<CommonUnitDecimalDigit_KIBUN_Result>().HasNoKey();
         }
 
         #region Flex
@@ -129,6 +131,9 @@ namespace FLEX.API.Context
         public DbSet<sp_PMS031_LoadAttachment_Result> sp_PMS031_LoadAttachment { get; set; }
 
         public DbSet<String_Result> sp_PMS062_ValidateDateInPeriod { get; set; }
+        public DbSet<sp_RPMS001_PartsWithdrawalSlipPM_Result> sp_RPMS001_PartsWithdrawalSlipPM { get; set; }
+        public DbSet<sp_RPMS001_PartsWithdrawalSlipCorrective_Result> sp_RPMS001_PartsWithdrawalSlipCorrective { get; set; }
+        public DbSet<CommonUnitDecimalDigit_KIBUN_Result> sp_Common_GetUnitDecimalDigit_KIBUN { get; set; }
         #endregion
 
     }

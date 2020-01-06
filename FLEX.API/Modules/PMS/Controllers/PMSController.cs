@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Transactions;
@@ -268,10 +269,11 @@ namespace FLEX.API.Modules.PMS.Controllers
                     return Ok(new List<PMS062_GetInQty_Result>());
                 }
 
-                var detail = param.ITEMS.Select(item => new InQtyItem(){
-                        PARTS_LOC_CD = item.LOC_CD,
-                        PARTS_ITEM_CD = item.ITEM_CD,
-                        UNITCODE = item.UNITCODE,
+                var detail = param.ITEMS.Select(item => new InQtyItem()
+                {
+                    PARTS_LOC_CD = item.LOC_CD,
+                    PARTS_ITEM_CD = item.ITEM_CD,
+                    UNITCODE = item.UNITCODE,
                 }).ToList();
 
                 var xml = XmlUtil.ConvertToXml_Store(detail);
@@ -585,6 +587,42 @@ namespace FLEX.API.Modules.PMS.Controllers
             catch (Exception ex)
             {
                 return BadRequest(ex.GetBaseException());
+            }
+        }
+
+        [HttpGet("{CHECK_REPH_ID}"), AllowAnonymous]
+        public ActionResult GetWithdrawalSlip(string CHECK_REPH_ID)
+        {
+            try
+            {
+                var path = svc.GetWithdrawalSlipPM(CHECK_REPH_ID);
+                string contentType;
+                if (!new FileExtensionContentTypeProvider().TryGetContentType(path, out contentType))
+                    contentType = "application/unknown";
+
+                return PhysicalFile(path, contentType, Path.GetFileName(path));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.GetBaseException().Message);
+            }
+        }
+
+        [HttpGet("{CHECK_REPH_ID}"), AllowAnonymous]
+        public ActionResult GetWithdrawalSlipCR(string CHECK_REPH_ID)
+        {
+            try
+            {
+                var path = svc.GetWithdrawalSlipCR(CHECK_REPH_ID);
+                string contentType;
+                if (!new FileExtensionContentTypeProvider().TryGetContentType(path, out contentType))
+                    contentType = "application/unknown";
+
+                return PhysicalFile(path, contentType, Path.GetFileName(path));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.GetBaseException().Message);
             }
         }
 
