@@ -9,5 +9,6 @@ namespace FLEX.API.Modules.PMS.Models
     {
         public string StringValue { get; set; }
         public decimal? DecimalValue { get; set; }
+        public int? IntValue { get; set; }
     }
 }

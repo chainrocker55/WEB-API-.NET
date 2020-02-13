@@ -50,5 +50,20 @@ namespace FLEX.API.Modules.PMS.Controllers
             }
         }
 
+        [HttpPost]
+        public ActionResult GetDailyChecklist_Detail(SingleParam param)
+        {
+            try
+            {
+                var result = svc.sp_PMS151_GetDailyChecklist_Detail(param.IntValue??-1);
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.GetBaseException());
+            }
+        }
+
     }
 }

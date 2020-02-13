@@ -63,6 +63,7 @@ namespace FLEX.API.Modules.Services.PMS
 
         #region DailyChecklist
         List<sp_PMS150_GetDailyChecklist> sp_PMS150_GetDailyChecklist(PMS150_Search_Criteria data);
+        List<sp_PMS151_GetDailyChecklist_Detail> sp_PMS151_GetDailyChecklist_Detail(int checklistNo);
         #endregion
     }
 
@@ -1842,6 +1843,12 @@ namespace FLEX.API.Modules.Services.PMS
                 data.CHECK_DATE_TO,
                 data.STATUSID.NullIfEmpty()
                 ).ToList();
+            return result;
+        }
+
+        public List<sp_PMS151_GetDailyChecklist_Detail> sp_PMS151_GetDailyChecklist_Detail(int checklistNo)
+        {
+            var result = ct.sp_PMS151_GetDailyChecklist_Detail.FromSqlRaw("sp_PMS151_GetDailyChecklist_Detail {0}", checklistNo).ToList();
             return result;
         }
         #endregion
