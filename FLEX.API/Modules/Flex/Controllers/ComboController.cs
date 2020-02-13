@@ -148,6 +148,27 @@ namespace FLEX.API.Modules.Flex.Controllers
             return Ok(result);
         }
 
+        [HttpGet]
+        public ActionResult<List<ComboStringValue>> GetComboShiftTypeDayNight(string DAY_SHIFT, string NIGHT_SHIFT, string OVERTIME_SHIFT)
+        {
+            var result = svc.GetComboShiftTypeDayNight(DAY_SHIFT,NIGHT_SHIFT,OVERTIME_SHIFT);
+            return Ok(result);
+        }
+
+        [HttpGet]
+        public ActionResult<List<ComboStringValue>> GetComboLineCode()
+        {
+            var result = svc.GetComboLineCode();
+            return Ok(result);
+        }
+
+        [HttpGet]
+        public ActionResult<List<ComboStringValue>> GetCombotDailyChecklistStatus()
+        {
+            var result = svc.GetCombotDailyChecklistStatus();
+            return Ok(result);
+        }
+
 
     }
 }

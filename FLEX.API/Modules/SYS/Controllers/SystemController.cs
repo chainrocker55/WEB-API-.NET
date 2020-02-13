@@ -55,7 +55,7 @@ namespace FLEX.API.Modules.SYS.Controllers
             return Ok(result);
         }
         [HttpPost]
-        public ActionResult<sp_SFM031_LoadUser_Result> GetUser(TZ_USER_MS data)
+        public ActionResult<sp_SFM031_LoadUser_Result> GetUser(sp_SFM031_LoadUser_Result data)
         {
             try
             {

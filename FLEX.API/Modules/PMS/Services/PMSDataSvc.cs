@@ -60,6 +60,10 @@ namespace FLEX.API.Modules.Services.PMS
         string sp_PMS062_ValidateDateInPeriod(DateTime? targetDate);
         string GetWithdrawalSlipPM(string CHECK_REPH_ID);
         string GetWithdrawalSlipCR(string CHECK_REPH_ID);
+
+        #region DailyChecklist
+        List<sp_PMS150_GetDailyChecklist> sp_PMS150_GetDailyChecklist(PMS150_Search_Criteria data);
+        #endregion
     }
 
     public class PMSDataSvc : IPMSDataSvc
@@ -1821,5 +1825,25 @@ namespace FLEX.API.Modules.Services.PMS
             Image retImage = pic != null ? pic.Image : null;
             return retImage;
         }
+
+        #region DailyChecklist
+       
+        public List<sp_PMS150_GetDailyChecklist> sp_PMS150_GetDailyChecklist(PMS150_Search_Criteria data)
+        {
+            data.SHIFTID = data.SHIFTID == -1 ? null : data.SHIFTID;
+            data.LINEID = data.LINEID == -1 ? null : data.LINEID;
+
+            var result = ct.sp_PMS150_GetDailyChecklist.FromSqlRaw("sp_PMS150_GetDailyChecklist {0},{1},{2},{3},{4},{5},{6}", 
+                data.SHIFTID,
+                data.LINEID,
+                data.MACHINE_NO.NullIfEmpty(),
+                data.MACHINE_NAME.NullIfEmpty(),
+                data.CHECK_DATE_FROM,
+                data.CHECK_DATE_TO,
+                data.STATUSID.NullIfEmpty()
+                ).ToList();
+            return result;
+        }
+        #endregion
     }
 }

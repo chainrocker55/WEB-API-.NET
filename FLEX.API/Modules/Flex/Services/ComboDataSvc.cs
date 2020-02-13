@@ -30,6 +30,9 @@ namespace FLEX.API.Services
         List<ComboStringValue> GetComboMachineComponent(string MACHINE_NO);
         List<ComboStringValue> GetComboItemUnit(string ITEM_CD, string UNIT_SETTING, bool SHOW_CODE);
         List<ComboStringValue> GetComboUnit(bool? SHOW_CODE);
+        List<ComboIntValue> GetComboShiftTypeDayNight(string DAY_SHIFT, string NIGHT_SHIFT, string OVERTIME_SHIFT);
+        List<ComboIntValue> GetComboLineCode();
+        List<ComboStringValue> GetCombotDailyChecklistStatus();
     }
     public class ComboDataSvc : IComboDataSvc
     {
@@ -129,5 +132,19 @@ namespace FLEX.API.Services
             return this.ct.sp_Combo_GetUnit_KIBUN.FromSqlRaw("sp_Combo_GetUnit_KIBUN {0}", SHOW_CODE).ToList();
         }
 
+        public List<ComboIntValue> GetComboShiftTypeDayNight(string DAY_SHIFT, string NIGHT_SHIFT, string OVERTIME_SHIFT)
+        {
+            return this.ct.sp_Combo_GetShiftType_KIBUN.FromSqlRaw("sp_Combo_GetShiftType_KIBUN {0}, {1}, {2}", DAY_SHIFT,NIGHT_SHIFT,OVERTIME_SHIFT).ToList();
+        }
+
+        public List<ComboIntValue> GetComboLineCode()
+        {
+            return this.ct.sp_Combo_GetLineCode_KIBUN.FromSqlRaw("sp_Combo_GetLineCode_KIBUN").ToList();
+        }
+
+        public List<ComboStringValue> GetCombotDailyChecklistStatus()
+        {
+            return this.ct.sp_Combo_GetDailyChecklistStatus_KIBUN.FromSqlRaw("sp_Combo_GetDailyChecklistStatus_KIBUN").ToList();
+        }
     }
 }

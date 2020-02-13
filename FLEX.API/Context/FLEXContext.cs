@@ -56,6 +56,7 @@ namespace FLEX.API.Context
             modelBuilder.Entity<sp_RPMS001_PartsWithdrawalSlipPM_Result>().HasNoKey();
             modelBuilder.Entity<sp_RPMS001_PartsWithdrawalSlipCorrective_Result>().HasNoKey();
             modelBuilder.Entity<CommonUnitDecimalDigit_KIBUN_Result>().HasNoKey();
+          //  modelBuilder.Entity<sp_PMS150_GetDailyChecklist>().HasNoKey();
         }
 
         #region Flex
@@ -93,6 +94,12 @@ namespace FLEX.API.Context
 
         #endregion
 
+        #region Combo DailyChecklist
+        public DbSet<ComboIntValue> sp_Combo_GetShiftType_KIBUN { get; set; }
+        public DbSet<ComboIntValue> sp_Combo_GetLineCode_KIBUN { get; set; }
+        public DbSet<ComboStringValue> sp_Combo_GetDailyChecklistStatus_KIBUN { get; set; }
+        #endregion
+
         #region System
         public DbSet<TB_CLASS_LIST_MS> TB_CLASS_LIST_MS { get; set; }
         public DbSet<TZ_SYS_CONFIG> TZ_SYS_CONFIG { get; set; }
@@ -126,6 +133,7 @@ namespace FLEX.API.Context
 
         public DbSet<PMS060_UserDefaultValue> sp_PMS060_GetCheckDefaultValueByUser { get; set; }
 
+
         public DbSet<String_Result> sp_PMS062_GetApprover { get; set; }
 
         public DbSet<sp_PMS031_LoadAttachment_Result> sp_PMS031_LoadAttachment { get; set; }
@@ -134,6 +142,12 @@ namespace FLEX.API.Context
         public DbSet<sp_RPMS001_PartsWithdrawalSlipPM_Result> sp_RPMS001_PartsWithdrawalSlipPM { get; set; }
         public DbSet<sp_RPMS001_PartsWithdrawalSlipCorrective_Result> sp_RPMS001_PartsWithdrawalSlipCorrective { get; set; }
         public DbSet<CommonUnitDecimalDigit_KIBUN_Result> sp_Common_GetUnitDecimalDigit_KIBUN { get; set; }
+
+        #endregion
+
+        #region DailyChecklist
+        public DbSet<sp_PMS150_GetDailyChecklist> sp_PMS150_GetDailyChecklist { get; set; }
+
         #endregion
 
     }

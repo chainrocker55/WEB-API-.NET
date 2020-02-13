@@ -32,6 +32,7 @@ namespace FLEX.API.Modules.PMS.Controllers
         const string STATUS_COMPLETE = "F09"; // Completed Check/Repair Order
         const string STATUS_CANCEL = "F10"; // Cancelled Check/Repair Order
 
+
         private readonly IPMSDataSvc svc;
         public PMSController(IPMSDataSvc service)
         {
@@ -625,11 +626,6 @@ namespace FLEX.API.Modules.PMS.Controllers
                 return BadRequest(ex.GetBaseException().Message);
             }
         }
-
-
-
-
-
 
     }
 }
