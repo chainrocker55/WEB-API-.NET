@@ -64,6 +64,9 @@ namespace FLEX.API.Modules.Services.PMS
         #region DailyChecklist
         List<sp_PMS150_GetDailyChecklist> sp_PMS150_GetDailyChecklist(PMS150_Search_Criteria data);
         List<sp_PMS151_GetDailyChecklist_Detail> sp_PMS151_GetDailyChecklist_Detail(int checklistNo);
+        List<sp_PMS151_GetDailyChecklist_Detail_Item> sp_PMS151_GetDailyChecklist_Detail_Item(int checklistNo);
+        List<TB_CLASS_LIST_MS_PMS> GetComboByClsInfoCD(string cls_info);
+
         #endregion
     }
 
@@ -1851,6 +1854,18 @@ namespace FLEX.API.Modules.Services.PMS
             var result = ct.sp_PMS151_GetDailyChecklist_Detail.FromSqlRaw("sp_PMS151_GetDailyChecklist_Detail {0}", checklistNo).ToList();
             return result;
         }
+
+        public List<sp_PMS151_GetDailyChecklist_Detail_Item> sp_PMS151_GetDailyChecklist_Detail_Item(int checklistNo)
+        {
+            var result = ct.sp_PMS151_GetDailyChecklist_Detail_Item.FromSqlRaw("sp_PMS151_GetDailyChecklist_Detail_Item {0}", checklistNo).ToList();
+            return result;
+        }
+
+        public List<TB_CLASS_LIST_MS_PMS> GetComboByClsInfoCD(string cls_info)
+        {
+            return ct.TB_CLASS_LIST_MS_PMS.FromSqlRaw("{0}",cls_info).ToList();
+        }
+
         #endregion
     }
 }

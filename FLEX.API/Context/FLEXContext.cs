@@ -57,7 +57,8 @@ namespace FLEX.API.Context
             modelBuilder.Entity<sp_RPMS001_PartsWithdrawalSlipCorrective_Result>().HasNoKey();
             modelBuilder.Entity<CommonUnitDecimalDigit_KIBUN_Result>().HasNoKey();
             modelBuilder.Entity<sp_PMS151_GetDailyChecklist_Detail>().HasNoKey();
-            //  modelBuilder.Entity<sp_PMS150_GetDailyChecklist>().HasNoKey();
+            modelBuilder.Entity<sp_PMS151_GetDailyChecklist_Detail_Item>().HasNoKey();
+            modelBuilder.Entity<TB_CLASS_LIST_MS_PMS>().HasKey(c => new { c.CLS_INFO_CD, c.CLS_CD });
         }
 
         #region Flex
@@ -147,9 +148,10 @@ namespace FLEX.API.Context
         #endregion
 
         #region DailyChecklist
+        public DbSet<TB_CLASS_LIST_MS_PMS> TB_CLASS_LIST_MS_PMS { get; set; }
         public DbSet<sp_PMS150_GetDailyChecklist> sp_PMS150_GetDailyChecklist { get; set; }
         public DbSet<sp_PMS151_GetDailyChecklist_Detail> sp_PMS151_GetDailyChecklist_Detail { get; set; }
-
+        public DbSet<sp_PMS151_GetDailyChecklist_Detail_Item> sp_PMS151_GetDailyChecklist_Detail_Item { get; set; }
         #endregion
 
     }
