@@ -33,6 +33,7 @@ namespace FLEX.API.Services
         List<ComboIntValue> GetComboShiftTypeDayNight(string DAY_SHIFT, string NIGHT_SHIFT, string OVERTIME_SHIFT);
         List<ComboIntValue> GetComboLineCode();
         List<ComboStringValue> GetCombotDailyChecklistStatus();
+        List<ComboStringValue> GetComboByClsInfoCD(string cls_info);
     }
     public class ComboDataSvc : IComboDataSvc
     {
@@ -145,6 +146,11 @@ namespace FLEX.API.Services
         public List<ComboStringValue> GetCombotDailyChecklistStatus()
         {
             return this.ct.sp_Combo_GetDailyChecklistStatus_KIBUN.FromSqlRaw("sp_Combo_GetDailyChecklistStatus_KIBUN").ToList();
+        }
+
+        public List<ComboStringValue> GetComboByClsInfoCD(string cls_info)
+        {
+            return this.ct.GetComboByClsInfoCD.FromSqlRaw("sp_Combo_ByClsInfoCD {0}", cls_info).ToList();
         }
     }
 }

@@ -58,7 +58,8 @@ namespace FLEX.API.Context
             modelBuilder.Entity<CommonUnitDecimalDigit_KIBUN_Result>().HasNoKey();
             modelBuilder.Entity<sp_PMS151_GetDailyChecklist_Detail>().HasNoKey();
             modelBuilder.Entity<sp_PMS151_GetDailyChecklist_Detail_Item>().HasNoKey();
-            modelBuilder.Entity<TB_CLASS_LIST_MS_PMS>().HasKey(c => new { c.CLS_INFO_CD, c.CLS_CD });
+            modelBuilder.Entity<sp_PMS151_PrepareDailyChecklist_Result>().HasNoKey();
+            modelBuilder.Entity<MESSAGE_PREPAIR>().HasNoKey();
         }
 
         #region Flex
@@ -100,6 +101,7 @@ namespace FLEX.API.Context
         public DbSet<ComboIntValue> sp_Combo_GetShiftType_KIBUN { get; set; }
         public DbSet<ComboIntValue> sp_Combo_GetLineCode_KIBUN { get; set; }
         public DbSet<ComboStringValue> sp_Combo_GetDailyChecklistStatus_KIBUN { get; set; }
+        public DbSet<ComboStringValue> GetComboByClsInfoCD { get; set; }
         #endregion
 
         #region System
@@ -152,6 +154,12 @@ namespace FLEX.API.Context
         public DbSet<sp_PMS150_GetDailyChecklist> sp_PMS150_GetDailyChecklist { get; set; }
         public DbSet<sp_PMS151_GetDailyChecklist_Detail> sp_PMS151_GetDailyChecklist_Detail { get; set; }
         public DbSet<sp_PMS151_GetDailyChecklist_Detail_Item> sp_PMS151_GetDailyChecklist_Detail_Item { get; set; }
+        public DbSet<MESSAGE_PREPAIR> sp_PMS151_ValidateBeforeSaveDailyChecklist { get; set; }
+        public DbSet<sp_PMS151_PrepareDailyChecklist_Result> sp_PMS151_PrepareDailyChecklist { get; set; }
+        public DbSet<String_Result> sp_PMS151_SaveDailyChecklist_Header { get; set; }
+        public DbSet<String_Result> sp_PMS151_SaveDailyChecklist_Detail { get; set; }
+        public DbSet<String_Result> sp_PMS151_SaveDailyChecklist_Detail_Item { get; set; }
+
         #endregion
 
     }

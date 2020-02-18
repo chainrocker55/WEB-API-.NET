@@ -169,6 +169,15 @@ namespace FLEX.API.Modules.Flex.Controllers
             return Ok(result);
         }
 
+        [HttpGet]
+        public ActionResult<List<ComboStringValue>> GetComboByClsInfoCD(string cls_info)
+        {
+            var result = svc.GetComboByClsInfoCD(cls_info);
+            return Ok(result);
+
+            
+        }
+
 
     }
 }
