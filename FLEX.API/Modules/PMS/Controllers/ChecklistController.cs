@@ -101,6 +101,11 @@ namespace FLEX.API.Modules.PMS.Controllers
                 var Shift = param.GetValue("Shift").ToObject<int>();
 
                 var result = svc.ValidateBeforePrepareDailyChecklist(LineCode, CheckDate, Shift);
+                //var message = result.MSG_CD;
+                //if(message == null||message == "")
+                //{
+                //    return Ok(message);
+                //}
                 return Ok(result);
             }
             catch (Exception ex)

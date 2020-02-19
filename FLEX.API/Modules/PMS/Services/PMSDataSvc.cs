@@ -66,7 +66,7 @@ namespace FLEX.API.Modules.Services.PMS
         List<sp_PMS151_GetDailyChecklist_Detail> sp_PMS151_GetDailyChecklist_Detail(int checklistNo);
         List<sp_PMS151_GetDailyChecklist_Detail_Item> sp_PMS151_GetDailyChecklist_Detail_Item(int checklistNo);
         List<TB_CLASS_LIST_MS_PMS> GetComboByClsInfoCD(string cls_info);
-        MESSAGE_PREPAIR ValidateBeforePrepareDailyChecklist(int line, DateTime checkDate, int shift);
+        string ValidateBeforePrepareDailyChecklist(int line, DateTime checkDate, int shift);
         List<sp_PMS151_PrepareDailyChecklist_Result> PrepareDailyChecklist(int line, DateTime checkDate, int shift, string cherker, string status, string userID);
         bool SaveDailyChecklist(PMS150_SaveDailyChecklist data);
         string sp_PMS151_SaveDailyChecklist_Header(int? checklistID, DateTime? checkDate, int? shiftID, string checker, string status, string userID);
@@ -1873,9 +1873,11 @@ namespace FLEX.API.Modules.Services.PMS
             return ct.TB_CLASS_LIST_MS_PMS.FromSqlRaw("sp_Combo_ByClsInfoCD {0}", cls_info).ToList();
         }
 
-        public MESSAGE_PREPAIR ValidateBeforePrepareDailyChecklist(int line, DateTime checkDate, int shift)
+        public string ValidateBeforePrepareDailyChecklist(int line, DateTime checkDate, int shift)
         {
-            return ct.sp_PMS151_ValidateBeforeSaveDailyChecklist.FromSqlRaw("ValidateBeforePrepareDailyChecklist {0},{1},{2}", line, checkDate, shift).ToList().FirstOrDefault();
+            var result = ct.sp_PMS151_ValidateBeforeSaveDailyChecklist.FromSqlRaw("sp_PMS151_ValidateBeforePrepareDailyChecklist {0},{1},{2}", line, checkDate, shift).ToList().FirstOrDefault();
+
+            return result.VALUE.NullIfEmpty();
         }
 
         public List<sp_PMS151_PrepareDailyChecklist_Result> PrepareDailyChecklist(int line, DateTime checkDate, int shift, string cherker, string status, string userID)
