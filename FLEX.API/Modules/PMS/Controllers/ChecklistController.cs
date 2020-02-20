@@ -125,7 +125,7 @@ namespace FLEX.API.Modules.PMS.Controllers
                 var Status = param.GetValue("Status").ToObject<String>();
                 var UserID = param.GetValue("UserID").ToObject<String>();
 
-                var result = svc.PrepareDailyChecklist(LineCode, CheckDate, Shift, Checker, Status, UserID);
+                var result = svc.PrepareDailyChecklist(LineCode, CheckDate, Shift, Checker, Status, UserID).FirstOrDefault();
                 return Ok(result);
             }
             catch (Exception ex)
