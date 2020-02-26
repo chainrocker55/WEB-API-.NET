@@ -144,8 +144,8 @@ namespace FLEX.API.Modules.PMS.Controllers
                 data.items = machineItemList;
                 data.userID = userID.StringValue;*/
 
-                var result = svc.SaveDailyChecklist(data);
-                return Ok(result);
+                svc.SaveDailyChecklist(data);
+                return Ok(true);
             }
             catch (Exception ex)
             {

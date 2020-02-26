@@ -68,10 +68,10 @@ namespace FLEX.API.Modules.Services.PMS
         List<TB_CLASS_LIST_MS_PMS> GetComboByClsInfoCD(string cls_info);
         string ValidateBeforePrepareDailyChecklist(int line, DateTime checkDate, int shift);
         List<sp_PMS151_PrepareDailyChecklist_Result> PrepareDailyChecklist(int line, DateTime checkDate, int shift, string cherker, string status, string userID);
-        bool SaveDailyChecklist(PMS150_SaveDailyChecklist data);
-        string sp_PMS151_SaveDailyChecklist_Header(int? checklistID, DateTime? checkDate, int? shiftID, string checker, string status, string userID);
-        string sp_PMS151_SaveDailyChecklist_Detail(int? checklistID, string machineNo, string checkFlag, string userID);
-        string sp_PMS151_SaveDailyChecklist_Detail_Item(int? checklistID, string machineNo, int? checklistItemID, string checkFlag, string ngReason, string remark, string checkRephID, string userID);
+        void SaveDailyChecklist(PMS150_SaveDailyChecklist data);
+        void sp_PMS151_SaveDailyChecklist_Header(int? checklistID, DateTime? checkDate, int? shiftID, string checker, string status, string userID);
+        void sp_PMS151_SaveDailyChecklist_Detail(int? checklistID, string machineNo, string checkFlag, string userID);
+        void sp_PMS151_SaveDailyChecklist_Detail_Item(int? checklistID, string machineNo, int? checklistItemID, string checkFlag, string ngReason, string remark, string checkRephID, string userID);
 
 
         #endregion
@@ -1885,7 +1885,7 @@ namespace FLEX.API.Modules.Services.PMS
             return ct.sp_PMS151_PrepareDailyChecklist.FromSqlRaw("sp_PMS151_PrepareDailyChecklist {0},{1},{2},{3},{4},{5}", line, checkDate, shift, cherker, status, userID).ToList();
         }
 
-        public bool SaveDailyChecklist(PMS150_SaveDailyChecklist data)
+        public void SaveDailyChecklist(PMS150_SaveDailyChecklist data)
         {
             var mHeader = data.header;
             var machine = data.machine;
@@ -1894,31 +1894,31 @@ namespace FLEX.API.Modules.Services.PMS
             using (var trans = new TransactionScope())
             {
 
-                var header = sp_PMS151_SaveDailyChecklist_Header(mHeader.DAILY_CHECKLIST_HID, mHeader.CHECK_DATE, mHeader.SHIFTID, mHeader.CHECKER, mHeader.STATUSID, userID);
+                sp_PMS151_SaveDailyChecklist_Header(mHeader.DAILY_CHECKLIST_HID, mHeader.CHECK_DATE, mHeader.SHIFTID, mHeader.CHECKER, mHeader.STATUSID, userID);
                 foreach (var m in machine)
                 {
                     sp_PMS151_SaveDailyChecklist_Detail(mHeader.DAILY_CHECKLIST_HID, m.MACHINE_NO, m.CHECK_FLAG, userID);
                     items.ForEach(e => sp_PMS151_SaveDailyChecklist_Detail_Item(mHeader.DAILY_CHECKLIST_HID, m.MACHINE_NO, e.CHECKLISTITEMID, e.CHECK_FLAG, e.NG_REASON, e.REMARK, e.CHECK_REPH_ID, userID));
                 }
-
+                
                 trans.Complete();
             }
-            return true;
+
         }
 
-        public string sp_PMS151_SaveDailyChecklist_Header(int? checklistID, DateTime? checkDate, int? shiftID, string checker, string status, string userID)
+        public void sp_PMS151_SaveDailyChecklist_Header(int? checklistID, DateTime? checkDate, int? shiftID, string checker, string status, string userID)
         {
-            return ct.sp_PMS151_SaveDailyChecklist_Header.FromSqlRaw("sp_PMS151_SaveDailyChecklist_Header {0},{1},{2},{3},{4},{5},{6}", checklistID, checkDate, shiftID, checker, status, userID).ToString();
+            ct.Database.ExecuteSqlRaw("sp_PMS151_SaveDailyChecklist_Header {0},{1},{2},{3},{4},{5}", checklistID, checkDate, shiftID, checker, status, userID);
         }
 
-        public string sp_PMS151_SaveDailyChecklist_Detail(int? checklistID, string machineNo, string checkFlag, string userID)
+        public void sp_PMS151_SaveDailyChecklist_Detail(int? checklistID, string machineNo, string checkFlag, string userID)
         {
-            return ct.sp_PMS151_SaveDailyChecklist_Detail.FromSqlRaw("sp_PMS151_SaveDailyChecklist_Detail {0},{1},{2},{3}", checklistID, machineNo, checkFlag, userID).ToString();
+            ct.Database.ExecuteSqlRaw("sp_PMS151_SaveDailyChecklist_Detail {0},{1},{2},{3}", checklistID, machineNo, checkFlag, userID);
         }
 
-        public string sp_PMS151_SaveDailyChecklist_Detail_Item(int? checklistID, string machineNo, int? checklistItemID, string checkFlag, string ngReason, string remark, string checkRephID, string userID)
+        public void sp_PMS151_SaveDailyChecklist_Detail_Item(int? checklistID, string machineNo, int? checklistItemID, string checkFlag, string ngReason, string remark, string checkRephID, string userID)
         {
-            return ct.sp_PMS151_SaveDailyChecklist_Detail_Item.FromSqlRaw("sp_PMS151_SaveDailyChecklist_Detail_Item {0},{1},{2},{3},{4},{5},{6},{8}", checklistID, machineNo, checklistItemID, checkFlag, ngReason, remark, checkRephID, userID).ToString();
+            ct.Database.ExecuteSqlRaw("sp_PMS151_SaveDailyChecklist_Detail_Item {0},{1},{2},{3},{4},{5},{6},{7}", checklistID, machineNo, checklistItemID, checkFlag, ngReason, remark, checkRephID, userID);
         }
 
         #endregion
